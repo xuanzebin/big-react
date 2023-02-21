@@ -6,6 +6,7 @@ importers:
     specifiers:
       '@commitlint/cli': ^17.4.2
       '@commitlint/config-conventional': ^17.4.2
+      '@rollup/plugin-commonjs': ^24.0.1
       '@swc/core': ^1.3.35
       '@swc/wasm': ^1.3.14
       '@typescript-eslint/eslint-plugin': ^5.53.0
@@ -16,11 +17,15 @@ importers:
       eslint-plugin-prettier: ^4.2.1
       husky: ^8.0.3
       prettier: ^2.8.4
+      rimraf: ^4.1.2
       rollup: ^3.17.2
+      rollup-plugin-generate-package-json: ^3.2.0
+      rollup-plugin-typescript2: ^0.34.1
       typescript: ^4.9.5
     devDependencies:
       '@commitlint/cli': 17.4.2_fl7nd4anwflkla24z5pl7washi
       '@commitlint/config-conventional': 17.4.2
+      '@rollup/plugin-commonjs': 24.0.1_rollup@3.17.2
       '@swc/core': 1.3.35
       '@swc/wasm': 1.3.14
       '@typescript-eslint/eslint-plugin': 5.53.0_ny4s7qc6yg74faf3d6xty2ofzy
@@ -31,7 +36,10 @@ importers:
       eslint-plugin-prettier: 4.2.1_u5wnrdwibbfomslmnramz52buy
       husky: 8.0.3
       prettier: 2.8.4
+      rimraf: 4.1.2
       rollup: 3.17.2
+      rollup-plugin-generate-package-json: 3.2.0_rollup@3.17.2
+      rollup-plugin-typescript2: 0.34.1_vi3xdhr63abcxdtwtptol35g5u
       typescript: 4.9.5
 
 packages:
@@ -306,6 +314,41 @@ packages:
       fastq: 1.15.0
     dev: true
 
+  /@rollup/plugin-commonjs/24.0.1_rollup@3.17.2:
+    resolution: {integrity: sha1-1Uuiaj48SV3DMr0nqB9+ni30b5A=, tarball: '@rollup/plugin-commonjs/download/@rollup/plugin-commonjs-24.0.1.tgz'}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^2.68.0||^3.0.0
+    dependencies:
+      '@rollup/pluginutils': 5.0.2_rollup@3.17.2
+      commondir: 1.0.1
+      estree-walker: 2.0.2
+      glob: 8.1.0
+      is-reference: 1.2.1
+      magic-string: 0.27.0
+      rollup: 3.17.2
+    dev: true
+
+  /@rollup/pluginutils/4.2.1:
+    resolution: {integrity: sha1-5sbDq6B0Ttzj+yB0ki03dsCvKm0=, tarball: '@rollup/pluginutils/download/@rollup/pluginutils-4.2.1.tgz'}
+    engines: {node: '>= 8.0.0'}
+    dependencies:
+      estree-walker: 2.0.2
+      picomatch: 2.3.1
+    dev: true
+
+  /@rollup/pluginutils/5.0.2_rollup@3.17.2:
+    resolution: {integrity: sha1-ASuPU8ceT2+csxfjEd8UBPVuejM=, tarball: '@rollup/pluginutils/download/@rollup/pluginutils-5.0.2.tgz'}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0
+    dependencies:
+      '@types/estree': 1.0.0
+      estree-walker: 2.0.2
+      picomatch: 2.3.1
+      rollup: 3.17.2
+    dev: true
+
   /@swc/core-darwin-arm64/1.3.35:
     resolution: {integrity: sha1-Vf8MwGl2nOi/ZWLKDnJP6cQ964w=, tarball: '@swc/core-darwin-arm64/download/@swc/core-darwin-arm64-1.3.35.tgz'}
     engines: {node: '>=10'}
@@ -411,6 +454,10 @@ packages:
 
   /@tsconfig/node16/1.0.3:
     resolution: {integrity: sha1-Ry6qtfFcH/3X+GKL1MT3U5lex54=, tarball: '@tsconfig/node16/download/@tsconfig/node16-1.0.3.tgz'}
+    dev: true
+
+  /@types/estree/1.0.0:
+    resolution: {integrity: sha1-X7LlNsGum/NTZu7Yeegn+lnKQcI=, tarball: '@types/estree/download/@types/estree-1.0.0.tgz'}
     dev: true
 
   /@types/json-schema/7.0.11:
@@ -660,6 +707,12 @@ packages:
       concat-map: 0.0.1
     dev: true
 
+  /brace-expansion/2.0.1:
+    resolution: {integrity: sha1-HtxFng8MVISG7Pn8mfIiE2S5oK4=, tarball: brace-expansion/download/brace-expansion-2.0.1.tgz}
+    dependencies:
+      balanced-match: 1.0.2
+    dev: true
+
   /braces/3.0.2:
     resolution: {integrity: sha1-NFThpGLujVmeI23zNs2epPiv4Qc=, tarball: braces/download/braces-3.0.2.tgz}
     engines: {node: '>=8'}
@@ -743,6 +796,10 @@ packages:
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
+    dev: true
+
+  /commondir/1.0.1:
+    resolution: {integrity: sha1-3dgA2gxmEnOTzKWVDqloo6rxJTs=, tarball: commondir/download/commondir-1.0.1.tgz}
     dev: true
 
   /compare-func/2.0.0:
@@ -856,6 +913,11 @@ packages:
 
   /deep-is/0.1.4:
     resolution: {integrity: sha1-pvLc5hL63S7x9Rm3NVHxfoUZmDE=, tarball: deep-is/download/deep-is-0.1.4.tgz}
+    dev: true
+
+  /detect-indent/5.0.0:
+    resolution: {integrity: sha1-OHHMCmoALow+Wzz38zYmRnXwa50=, tarball: detect-indent/download/detect-indent-5.0.0.tgz}
+    engines: {node: '>=4'}
     dev: true
 
   /diff/4.0.2:
@@ -1052,6 +1114,10 @@ packages:
     engines: {node: '>=4.0'}
     dev: true
 
+  /estree-walker/2.0.2:
+    resolution: {integrity: sha1-UvAQF4wqTBF6d1fP6UKtt9LaTKw=, tarball: estree-walker/download/estree-walker-2.0.2.tgz}
+    dev: true
+
   /esutils/2.0.3:
     resolution: {integrity: sha1-dNLrTeC42hKTcRkQ1Qd1ubcQ72Q=, tarball: esutils/download/esutils-2.0.3.tgz}
     engines: {node: '>=0.10.0'}
@@ -1119,6 +1185,15 @@ packages:
       to-regex-range: 5.0.1
     dev: true
 
+  /find-cache-dir/3.3.2:
+    resolution: {integrity: sha1-swxbbv8HMHMa6pu9nb7L2AJW1ks=, tarball: find-cache-dir/download/find-cache-dir-3.3.2.tgz}
+    engines: {node: '>=8'}
+    dependencies:
+      commondir: 1.0.1
+      make-dir: 3.1.0
+      pkg-dir: 4.2.0
+    dev: true
+
   /find-up/4.1.0:
     resolution: {integrity: sha1-l6/n1s3AvFkoWEt8jXsW6KmqXRk=, tarball: find-up/download/find-up-4.1.0.tgz}
     engines: {node: '>=8'}
@@ -1145,6 +1220,15 @@ packages:
 
   /flatted/3.2.7:
     resolution: {integrity: sha1-YJ85IHy2FLidB2W0d8stQ3+/l4c=, tarball: flatted/download/flatted-3.2.7.tgz}
+    dev: true
+
+  /fs-extra/10.1.0:
+    resolution: {integrity: sha1-Aoc8+8QITd4SfqpfmQXu8jJdGr8=, tarball: fs-extra/download/fs-extra-10.1.0.tgz}
+    engines: {node: '>=12'}
+    dependencies:
+      graceful-fs: 4.2.10
+      jsonfile: 6.1.0
+      universalify: 2.0.0
     dev: true
 
   /fs-extra/11.1.0:
@@ -1216,6 +1300,17 @@ packages:
       minimatch: 3.1.2
       once: 1.4.0
       path-is-absolute: 1.0.1
+    dev: true
+
+  /glob/8.1.0:
+    resolution: {integrity: sha1-04j2Vlk+9wjuPjRkD9+5mp/Rwz4=, tarball: glob/download/glob-8.1.0.tgz}
+    engines: {node: '>=12'}
+    dependencies:
+      fs.realpath: 1.0.0
+      inflight: 1.0.6
+      inherits: 2.0.4
+      minimatch: 5.1.6
+      once: 1.4.0
     dev: true
 
   /global-dirs/0.1.1:
@@ -1381,6 +1476,12 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
+  /is-reference/1.2.1:
+    resolution: {integrity: sha1-iy2sCzcfS8mU/eq6nrVC0DAC0Lc=, tarball: is-reference/download/is-reference-1.2.1.tgz}
+    dependencies:
+      '@types/estree': 1.0.0
+    dev: true
+
   /is-stream/2.0.1:
     resolution: {integrity: sha1-+sHj1TuXrVqdCunO8jifWBClwHc=, tarball: is-stream/download/is-stream-2.0.1.tgz}
     engines: {node: '>=8'}
@@ -1523,6 +1624,28 @@ packages:
       yallist: 4.0.0
     dev: true
 
+  /magic-string/0.27.0:
+    resolution: {integrity: sha1-5KNBO0urbZjSvs/9SLSiV+/9u/M=, tarball: magic-string/download/magic-string-0.27.0.tgz}
+    engines: {node: '>=12'}
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.4.14
+    dev: true
+
+  /make-dir/2.1.0:
+    resolution: {integrity: sha1-XwMQ4YuL6JjMBwCSlaMK5B6R5vU=, tarball: make-dir/download/make-dir-2.1.0.tgz}
+    engines: {node: '>=6'}
+    dependencies:
+      pify: 4.0.1
+      semver: 5.7.1
+    dev: true
+
+  /make-dir/3.1.0:
+    resolution: {integrity: sha1-QV6WcEazp/HRhSd9hKpYIDcmoT8=, tarball: make-dir/download/make-dir-3.1.0.tgz}
+    engines: {node: '>=8'}
+    dependencies:
+      semver: 6.3.0
+    dev: true
+
   /make-error/1.3.6:
     resolution: {integrity: sha1-LrLjfqm2fEiR9oShOUeZr0hM96I=, tarball: make-error/download/make-error-1.3.6.tgz}
     dev: true
@@ -1585,6 +1708,13 @@ packages:
     resolution: {integrity: sha1-Gc0ZS/0+Qo8EmnCBfAONiatL41s=, tarball: minimatch/download/minimatch-3.1.2.tgz}
     dependencies:
       brace-expansion: 1.1.11
+    dev: true
+
+  /minimatch/5.1.6:
+    resolution: {integrity: sha1-HPy4z1Ui6mmVLNKvla4JR38SKpY=, tarball: minimatch/download/minimatch-5.1.6.tgz}
+    engines: {node: '>=10'}
+    dependencies:
+      brace-expansion: 2.0.1
     dev: true
 
   /minimist-options/4.1.0:
@@ -1742,6 +1872,18 @@ packages:
     engines: {node: '>=8.6'}
     dev: true
 
+  /pify/4.0.1:
+    resolution: {integrity: sha1-SyzSXFDVmHNcUCkiJP2MbfQeMjE=, tarball: pify/download/pify-4.0.1.tgz}
+    engines: {node: '>=6'}
+    dev: true
+
+  /pkg-dir/4.2.0:
+    resolution: {integrity: sha1-8JkTPfft5CLoHR2ESCcO6z5CYfM=, tarball: pkg-dir/download/pkg-dir-4.2.0.tgz}
+    engines: {node: '>=8'}
+    dependencies:
+      find-up: 4.1.0
+    dev: true
+
   /prelude-ls/1.2.1:
     resolution: {integrity: sha1-3rxkidem5rDnYRiIzsiAM30xY5Y=, tarball: prelude-ls/download/prelude-ls-1.2.1.tgz}
     engines: {node: '>= 0.8.0'}
@@ -1868,6 +2010,38 @@ packages:
       glob: 7.2.3
     dev: true
 
+  /rimraf/4.1.2:
+    resolution: {integrity: sha1-IN+8mAg736oosBGDFiiF7yE9v3w=, tarball: rimraf/download/rimraf-4.1.2.tgz}
+    engines: {node: '>=14'}
+    hasBin: true
+    dev: true
+
+  /rollup-plugin-generate-package-json/3.2.0_rollup@3.17.2:
+    resolution: {integrity: sha1-6cHTWPK+bFi0mFOvWCBSktRaM/8=, tarball: rollup-plugin-generate-package-json/download/rollup-plugin-generate-package-json-3.2.0.tgz}
+    engines: {node: '>=8.3'}
+    peerDependencies:
+      rollup: '>=1.0.0'
+    dependencies:
+      read-pkg: 5.2.0
+      rollup: 3.17.2
+      write-pkg: 4.0.0
+    dev: true
+
+  /rollup-plugin-typescript2/0.34.1_vi3xdhr63abcxdtwtptol35g5u:
+    resolution: {integrity: sha1-xFfxVacdEzwUJokhP854aU4w0L4=, tarball: rollup-plugin-typescript2/download/rollup-plugin-typescript2-0.34.1.tgz}
+    peerDependencies:
+      rollup: '>=1.26.3'
+      typescript: '>=2.4.0'
+    dependencies:
+      '@rollup/pluginutils': 4.2.1
+      find-cache-dir: 3.3.2
+      fs-extra: 10.1.0
+      rollup: 3.17.2
+      semver: 7.3.8
+      tslib: 2.5.0
+      typescript: 4.9.5
+    dev: true
+
   /rollup/3.17.2:
     resolution: {integrity: sha1-pOzSnEiGcqBgbkHvV0dPrXFXUKk=, tarball: rollup/download/rollup-3.17.2.tgz}
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
@@ -1888,6 +2062,11 @@ packages:
 
   /semver/5.7.1:
     resolution: {integrity: sha1-qVT5Ma66UI0we78Gnv8MAclhFvc=, tarball: semver/download/semver-5.7.1.tgz}
+    hasBin: true
+    dev: true
+
+  /semver/6.3.0:
+    resolution: {integrity: sha1-7gpkyK9ejO6mdoexM3YeG+y9HT0=, tarball: semver/download/semver-6.3.0.tgz}
     hasBin: true
     dev: true
 
@@ -1918,6 +2097,13 @@ packages:
   /slash/3.0.0:
     resolution: {integrity: sha1-ZTm+hwwWWtvVJAIg2+Nh8bxNRjQ=, tarball: slash/download/slash-3.0.0.tgz}
     engines: {node: '>=8'}
+    dev: true
+
+  /sort-keys/2.0.0:
+    resolution: {integrity: sha1-ZYU1WEhh7JfXMNbPQYIuH1ZoQSg=, tarball: sort-keys/download/sort-keys-2.0.0.tgz}
+    engines: {node: '>=4'}
+    dependencies:
+      is-plain-obj: 1.1.0
     dev: true
 
   /spdx-correct/3.1.1:
@@ -2074,6 +2260,10 @@ packages:
     resolution: {integrity: sha1-zy04vcNKE0vK8QkcQfZhni9nLQA=, tarball: tslib/download/tslib-1.14.1.tgz}
     dev: true
 
+  /tslib/2.5.0:
+    resolution: {integrity: sha1-Qr/thvV4eutB0DGGbI9AJCng/d8=, tarball: tslib/download/tslib-2.5.0.tgz}
+    dev: true
+
   /tsutils/3.21.0_typescript@4.9.5:
     resolution: {integrity: sha1-tIcX05TOpsHglpg+7Vjp1hcVtiM=, tarball: tsutils/download/tsutils-3.21.0.tgz}
     engines: {node: '>= 6'}
@@ -2099,6 +2289,11 @@ packages:
   /type-fest/0.20.2:
     resolution: {integrity: sha1-G/IH9LKPkVg2ZstfvTJ4hzAc1fQ=, tarball: type-fest/download/type-fest-0.20.2.tgz}
     engines: {node: '>=10'}
+    dev: true
+
+  /type-fest/0.4.1:
+    resolution: {integrity: sha1-i993dDOF2KTxO6lfYQ9czWjHKPg=, tarball: type-fest/download/type-fest-0.4.1.tgz}
+    engines: {node: '>=6'}
     dev: true
 
   /type-fest/0.6.0:
@@ -2167,6 +2362,35 @@ packages:
 
   /wrappy/1.0.2:
     resolution: {integrity: sha1-tSQ9jz7BqjXxNkYFvA0QNuMKtp8=, tarball: wrappy/download/wrappy-1.0.2.tgz}
+    dev: true
+
+  /write-file-atomic/2.4.3:
+    resolution: {integrity: sha1-H9Lprh3z51uNjDZ0Q8aS1MqB9IE=, tarball: write-file-atomic/download/write-file-atomic-2.4.3.tgz}
+    dependencies:
+      graceful-fs: 4.2.10
+      imurmurhash: 0.1.4
+      signal-exit: 3.0.7
+    dev: true
+
+  /write-json-file/3.2.0:
+    resolution: {integrity: sha1-Zbvcns2KFFjhWVJ3DMut/P9f5io=, tarball: write-json-file/download/write-json-file-3.2.0.tgz}
+    engines: {node: '>=6'}
+    dependencies:
+      detect-indent: 5.0.0
+      graceful-fs: 4.2.10
+      make-dir: 2.1.0
+      pify: 4.0.1
+      sort-keys: 2.0.0
+      write-file-atomic: 2.4.3
+    dev: true
+
+  /write-pkg/4.0.0:
+    resolution: {integrity: sha1-Z1zATvbBH6rLvHdxskwKu/KiADk=, tarball: write-pkg/download/write-pkg-4.0.0.tgz}
+    engines: {node: '>=8'}
+    dependencies:
+      sort-keys: 2.0.0
+      type-fest: 0.4.1
+      write-json-file: 3.2.0
     dev: true
 
   /y18n/5.0.8:
