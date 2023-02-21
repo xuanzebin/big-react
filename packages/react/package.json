@@ -1,0 +1,15 @@
+{
+	"name": "react",
+	"version": "1.0.0",
+	"description": "react 公共方法",
+	"module": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"dependencies": {
+		"shared": "workspace:*"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC"
+}
