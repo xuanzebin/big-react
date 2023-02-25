@@ -21,6 +21,8 @@ export class FiberNode {
 
 	memoizedState: any
 
+	subtreeFlags: Flags
+
 	pendingProps: Props
 
 	memoizedProps: Props
@@ -56,6 +58,7 @@ export class FiberNode {
 		this.updateQueue = null
 
 		this.flags = NoFlags
+		this.subtreeFlags = NoFlags
 		this.alternate = null
 	}
 }
@@ -86,6 +89,7 @@ export function createWorInProgress(current: FiberNode, pendingProps: Props) {
 	} else {
 		wip.pendingProps = pendingProps
 		wip.flags = NoFlags
+		wip.subtreeFlags = NoFlags
 	}
 
 	wip.type = current.type
