@@ -2,6 +2,7 @@ import { createWorInProgress, FiberNode, FiberRootNode } from './fiber'
 import { beginWork } from './beginWork'
 import { completeWork } from './completeWork'
 import { HostRoot } from './workTags'
+import { commitMutationEffects } from './commitWork'
 import { MutationMask, NoFlags } from './fiberFlags'
 
 let workInProgress: FiberNode | null = null
@@ -71,6 +72,8 @@ function commitRender(root: FiberRootNode) {
 
 	if (subtreeHasEffect || rootHasEffect) {
 		root.current = finishedWork
+
+		commitMutationEffects(finishedWork)
 	} else {
 		root.current = finishedWork
 	}
