@@ -6,6 +6,7 @@ importers:
     specifiers:
       '@commitlint/cli': ^17.4.2
       '@commitlint/config-conventional': ^17.4.2
+      '@rollup/plugin-alias': ^4.0.3
       '@rollup/plugin-commonjs': ^24.0.1
       '@rollup/plugin-replace': ^5.0.2
       '@swc/core': ^1.3.35
@@ -28,6 +29,7 @@ importers:
     devDependencies:
       '@commitlint/cli': 17.4.2_fl7nd4anwflkla24z5pl7washi
       '@commitlint/config-conventional': 17.4.2
+      '@rollup/plugin-alias': 4.0.3_rollup@3.17.2
       '@rollup/plugin-commonjs': 24.0.1_rollup@3.17.2
       '@swc/core': 1.3.35
       '@swc/wasm': 1.3.14
@@ -49,6 +51,14 @@ importers:
     specifiers:
       shared: workspace:*
     dependencies:
+      shared: link:../shared
+
+  packages/react-dom:
+    specifiers:
+      react-reconciler: workspace:*
+      shared: workspace:*
+    dependencies:
+      react-reconciler: link:../react-reconciler
       shared: link:../shared
 
   packages/react-reconciler:
@@ -329,6 +339,19 @@ packages:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.15.0
+    dev: true
+
+  /@rollup/plugin-alias/4.0.3_rollup@3.17.2:
+    resolution: {integrity: sha512-ZuDWE1q4PQDhvm/zc5Prun8sBpLJy41DMptYrS6MhAy9s9kL/doN1613BWfEchGVfKxzliJ3BjbOPizXX38DbQ==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      rollup: 3.17.2
+      slash: 4.0.0
     dev: true
 
   /@rollup/plugin-commonjs/24.0.1_rollup@3.17.2:
@@ -2152,6 +2175,11 @@ packages:
   /slash/3.0.0:
     resolution: {integrity: sha1-ZTm+hwwWWtvVJAIg2+Nh8bxNRjQ=, tarball: slash/download/slash-3.0.0.tgz}
     engines: {node: '>=8'}
+    dev: true
+
+  /slash/4.0.0:
+    resolution: {integrity: sha512-3dOsAHXXUkQTpOYcoAxLIorMTp4gIQr5IW3iVb7A7lFIp0VHhnynm9izx6TssdrIcVIESAlVjtnO2K8bg+Coew==}
+    engines: {node: '>=12'}
     dev: true
 
   /sort-keys/2.0.0:

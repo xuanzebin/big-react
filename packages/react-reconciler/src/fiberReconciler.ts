@@ -1,4 +1,4 @@
-import { Container } from 'react-reconciler/src/hostConfig'
+import { Container } from 'hostConfig'
 
 import {
 	UpdateQueue,
