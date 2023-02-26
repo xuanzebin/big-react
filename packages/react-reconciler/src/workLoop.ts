@@ -52,6 +52,9 @@ function renderRoot(root: FiberRootNode) {
 	const finishedWork = root.current.alternate
 	root.finishedWork = finishedWork
 
+	if (__DEV__) {
+		console.warn('finishedWork 生成完毕', finishedWork)
+	}
 	commitRender(root)
 }
 
@@ -101,7 +104,7 @@ function completeUnitOfWork(fiber: FiberNode) {
 	let node: FiberNode | null = fiber
 
 	do {
-		completeWork(fiber)
+		completeWork(node)
 
 		if (node.sibling !== null) {
 			workInProgress = node.sibling

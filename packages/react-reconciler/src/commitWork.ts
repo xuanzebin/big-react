@@ -70,7 +70,7 @@ function getHostParent(finishedWork: FiberNode): Container | null {
 		parent = parent.return
 	}
 
-	if (__DEV__) {
+	if (__DEV__ && finishedWork.tag !== HostRoot) {
 		console.warn('未找到 host parent')
 	}
 
