@@ -29,7 +29,7 @@ export default [
 			...getBaseRollupPlugins(),
 			alias({
 				entries: {
-					hostconfig: `${pkgPath}/src/hostconfig.ts`
+					hostConfig: `${pkgPath}/src/hostConfig.ts`
 				}
 			}),
 			generatePackageJson({
