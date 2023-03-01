@@ -1,7 +1,13 @@
 import { ReactElementType } from 'shared/ReactTypes'
 
 import { FiberNode } from './fiber'
-import { HostComponent, HostRoot, HostText } from './workTags'
+import { renderWithHooks } from './fiberHooks'
+import {
+	FunctionComponent,
+	HostComponent,
+	HostRoot,
+	HostText
+} from './workTags'
 import { processUpdateQueue, UpdateQueue } from './updateQueue'
 import { mountChildFibers, reconcileChildFibers } from './childFibers'
 
@@ -13,6 +19,8 @@ export const beginWork = (wip: FiberNode) => {
 			return updateHostRoot(wip)
 		case HostComponent:
 			return updateHostComponent(wip)
+		case FunctionComponent:
+			return updateFunctionComponent(wip)
 		case HostText:
 			return null
 		default:
@@ -45,6 +53,14 @@ function updateHostRoot(wip: FiberNode) {
 function updateHostComponent(wip: FiberNode) {
 	const nextPorps = wip.pendingProps
 	const nextChildren = nextPorps.children
+
+	reconcileChildren(wip, nextChildren)
+
+	return wip.child
+}
+
+function updateFunctionComponent(wip: FiberNode) {
+	const nextChildren = renderWithHooks(wip)
 
 	reconcileChildren(wip, nextChildren)
 
