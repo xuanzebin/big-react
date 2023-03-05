@@ -1,5 +1,5 @@
 import { FiberNode } from './fiber'
-import { Flags, NoFlags } from './fiberFlags'
+import { Flags, NoFlags, Update } from './fiberFlags'
 import {
 	FunctionComponent,
 	HostComponent,
@@ -12,6 +12,10 @@ import {
 	createInstance,
 	createTextNodeInstance
 } from 'hostConfig'
+
+function markUpdate(wip: FiberNode) {
+	wip.flags |= Update
+}
 
 export const completeWork = (wip: FiberNode) => {
 	// 递归中的归
@@ -32,6 +36,12 @@ export const completeWork = (wip: FiberNode) => {
 		case HostText:
 			if (current !== null && current.stateNode !== null) {
 				// update
+				const oldText = current.memoizedProps.content
+				const newText = newProps?.content
+
+				if (oldText !== newText) {
+					markUpdate(wip)
+				}
 			} else {
 				const instance = createTextNodeInstance(newProps?.content)
 				wip.stateNode = instance
