@@ -10,7 +10,7 @@ const createRoot = (root: Container) => {
 
 	return {
 		render(element: ReactElementType) {
-			updateContainer(element, container)
+			return updateContainer(element, container)
 		}
 	}
 }
