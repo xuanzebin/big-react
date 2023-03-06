@@ -1,8 +1,24 @@
-import { appendChildToContainer, Container } from 'hostConfig'
+import {
+	appendChildToContainer,
+	commitUpdate,
+	Container,
+	removeChild
+} from 'hostConfig'
 
 import { FiberNode, FiberRootNode } from './fiber'
-import { MutationMask, NoFlags, Placement } from './fiberFlags'
-import { HostComponent, HostRoot, HostText } from './workTags'
+import {
+	ChildDeletion,
+	MutationMask,
+	NoFlags,
+	Placement,
+	Update
+} from './fiberFlags'
+import {
+	FunctionComponent,
+	HostComponent,
+	HostRoot,
+	HostText
+} from './workTags'
 
 let nextEffect: FiberNode | null = null
 
@@ -43,8 +59,82 @@ const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
 		finishedWork.flags &= ~Placement
 	}
 
-	// Update
-	// Deletion
+	if ((flags & Update) !== NoFlags) {
+		commitUpdate(finishedWork)
+		finishedWork.flags &= ~Update
+	}
+
+	if ((flags & ChildDeletion) !== NoFlags) {
+		commitDeletion(finishedWork)
+		finishedWork.flags &= ~ChildDeletion
+	}
+}
+
+function commitDeletion(finishedWork: FiberNode) {
+	let rootHostNode: FiberNode | null = null
+
+	commitNestedComponent(finishedWork, (unmontFiber: FiberNode) => {
+		switch (unmontFiber.tag) {
+			case HostComponent:
+				// TODO 解绑 ref
+				if (rootHostNode === null) {
+					rootHostNode = unmontFiber
+				}
+				return
+			case HostText:
+				if (rootHostNode === null) {
+					rootHostNode = unmontFiber
+				}
+				return
+			case FunctionComponent:
+				// TODO useEffect unmount 解绑 ref
+				return
+			default:
+				if (__DEV__) {
+					console.warn('未实现的 unmount 类型', unmontFiber)
+				}
+				return
+		}
+	})
+
+	if (rootHostNode !== null) {
+		const node = rootHostNode as FiberNode
+		const hostParent = getHostParent(rootHostNode)
+
+		if (hostParent !== null) {
+			removeChild(node.stateNode, hostParent)
+		}
+
+		node.child = null
+		node.return = null
+	}
+}
+
+function commitNestedComponent(
+	root: FiberNode,
+	onCommitUnmount: (fiber: FiberNode) => void
+) {
+	let node = root
+	while (true) {
+		onCommitUnmount(node)
+
+		if (node.child !== null) {
+			node.child.return = node
+			node = node.child
+			continue
+		}
+
+		if (node === root) return
+
+		while (node.sibling === null) {
+			if (node.return === null || node.return === root) return
+
+			node = node.return
+		}
+
+		node.sibling.return = node.return
+		node = node.sibling
+	}
 }
 
 function commitPlacement(finishedWork: FiberNode) {
