@@ -65,15 +65,21 @@ const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
 	}
 
 	if ((flags & ChildDeletion) !== NoFlags) {
-		commitDeletion(finishedWork)
+		const chilDeletions = finishedWork.deletions
+
+		if (chilDeletions !== null) {
+			chilDeletions.forEach((child) => {
+				commitDeletion(child)
+			})
+		}
 		finishedWork.flags &= ~ChildDeletion
 	}
 }
 
-function commitDeletion(finishedWork: FiberNode) {
+function commitDeletion(chilDeletion: FiberNode) {
 	let rootHostNode: FiberNode | null = null
 
-	commitNestedComponent(finishedWork, (unmontFiber: FiberNode) => {
+	commitNestedComponent(chilDeletion, (unmontFiber: FiberNode) => {
 		switch (unmontFiber.tag) {
 			case HostComponent:
 				// TODO 解绑 ref
