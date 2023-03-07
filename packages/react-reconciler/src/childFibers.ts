@@ -17,13 +17,26 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		}
 	}
 
+	function deleteRemainingChild(
+		returnFiber: FiberNode,
+		currentFirstChild: FiberNode | null
+	) {
+		if (!shouldTrackEffects) return
+
+		while (currentFirstChild !== null) {
+			deleteChild(returnFiber, currentFirstChild)
+
+			currentFirstChild = currentFirstChild.sibling
+		}
+	}
+
 	function reconcileSingleElement(
 		returnFiber: FiberNode,
 		currentFiber: FiberNode | null,
 		newChild: ReactElementType
 	) {
 		const key = newChild.key
-		work: if (currentFiber !== null) {
+		while (currentFiber !== null) {
 			// update
 			if (currentFiber.key === key) {
 				// key 相同
@@ -33,19 +46,19 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 						const existing = useFiber(currentFiber, newChild.props)
 
 						existing.return = returnFiber
+						deleteRemainingChild(returnFiber, currentFiber.sibling)
 
 						return existing
 					} else {
-						deleteChild(returnFiber, currentFiber)
-
-						break work
+						deleteRemainingChild(returnFiber, currentFiber)
 					}
 				} else {
 					console.warn('还未实现的 react 类型', newChild)
-					break work
+					break
 				}
 			} else {
 				deleteChild(returnFiber, currentFiber)
+				currentFiber = currentFiber.sibling
 			}
 		}
 
@@ -61,17 +74,19 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		currentFiber: FiberNode | null,
 		content: number | string
 	) {
-		if (currentFiber !== null) {
+		while (currentFiber !== null) {
 			// update
 			if (currentFiber.tag === HostText) {
 				const existing = useFiber(currentFiber, { content })
 
 				existing.return = returnFiber
+				deleteRemainingChild(returnFiber, currentFiber.sibling)
 
 				return existing
 			}
 
 			deleteChild(returnFiber, currentFiber)
+			currentFiber = currentFiber.sibling
 		}
 
 		const fiber = new FiberNode(HostText, { content }, null)
