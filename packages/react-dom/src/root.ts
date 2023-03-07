@@ -1,10 +1,11 @@
 import { Container } from 'hostConfig'
-import { initEvent } from 'react-dom/test-utils'
 import {
 	createContainer,
 	updateContainer
 } from 'react-reconciler/src/fiberReconciler'
 import { ReactElementType } from 'shared/ReactTypes'
+
+import { initEvent } from './syntheticEvent'
 
 const createRoot = (root: Container) => {
 	const container = createContainer(root)
