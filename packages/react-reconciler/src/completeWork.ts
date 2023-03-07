@@ -12,6 +12,7 @@ import {
 	createInstance,
 	createTextNodeInstance
 } from 'hostConfig'
+import { updateFiberProps } from 'react-dom/src/syntheticEvent'
 
 function markUpdate(wip: FiberNode) {
 	wip.flags |= Update
@@ -26,6 +27,8 @@ export const completeWork = (wip: FiberNode) => {
 		case HostComponent:
 			if (current !== null && current.stateNode !== null) {
 				// update
+				// TODO: reconciler 不应该和 react-dom 相关内容捆绑
+				updateFiberProps(wip.stateNode, newProps)
 			} else {
 				const instance = createInstance(wip.type, newProps)
 				appendAllChildren(instance, wip)

@@ -1,4 +1,5 @@
 import { Container } from 'hostConfig'
+import { initEvent } from 'react-dom/test-utils'
 import {
 	createContainer,
 	updateContainer
@@ -10,6 +11,7 @@ const createRoot = (root: Container) => {
 
 	return {
 		render(element: ReactElementType) {
+			initEvent(root, 'click')
 			return updateContainer(element, container)
 		}
 	}
