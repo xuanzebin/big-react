@@ -5,6 +5,8 @@ import { HostText } from './workTags'
 import { ChildDeletion, Placement } from './fiberFlags'
 import { createFiberFromElement, createWorInProgress, FiberNode } from './fiber'
 
+type ExistingChildren = Map<string | number, FiberNode>
+
 function ChildReconciler(shouldTrackEffects: boolean) {
 	function deleteChild(returnFiber: FiberNode, childToDelete: FiberNode) {
 		if (!shouldTrackEffects) return
@@ -96,6 +98,108 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		return fiber
 	}
 
+	function reconcileChildrenArray(
+		returnFiber: FiberNode,
+		currentFirstChild: FiberNode,
+		newChild: any[]
+	) {
+		let lastPlacedIndex = 0
+		let lastNewFiber: FiberNode | null = null
+		let firstNewFiber: FiberNode | null = null
+		let current: FiberNode | null = currentFirstChild
+
+		const existingChildren: ExistingChildren = new Map()
+
+		while (current !== null) {
+			const keyToUse = current.key !== null ? current.key : current.index
+
+			existingChildren.set(keyToUse, current)
+
+			current = current.sibling
+		}
+
+		for (let i = 0; i < newChild.length; i++) {
+			const after = newChild[i]
+
+			const newFiber = updateFromMap(returnFiber, existingChildren, i, after)
+
+			if (newFiber === null) {
+				continue
+			}
+
+			newFiber.index = i
+			newFiber.return = returnFiber
+
+			if (lastNewFiber === null) {
+				lastNewFiber = newFiber
+				firstNewFiber = newFiber
+			} else {
+				lastNewFiber.sibling = newFiber
+				lastNewFiber = lastNewFiber.sibling
+			}
+
+			if (!shouldTrackEffects) continue
+
+			const current = newFiber.alternate
+			if (current !== null) {
+				const oldIndex = current.index
+				if (oldIndex < lastPlacedIndex) {
+					newFiber.flags |= Placement
+				} else {
+					lastPlacedIndex = oldIndex
+				}
+			} else {
+				newFiber.flags |= Placement
+			}
+		}
+
+		existingChildren.forEach((fiber) => {
+			deleteChild(returnFiber, fiber)
+		})
+
+		return firstNewFiber
+	}
+
+	function updateFromMap(
+		returnFiber: FiberNode,
+		existingChild: ExistingChildren,
+		index: number,
+		element: any
+	) {
+		const keyToUse = element.key !== null ? element.key : index
+		const before = existingChild.get(keyToUse)
+
+		if (typeof element === 'string' || typeof element === 'number') {
+			if (before && before.tag === HostText) {
+				existingChild.delete(keyToUse)
+				return useFiber(before, { content: element + '' })
+			}
+
+			return new FiberNode(HostText, { content: element + '' }, null)
+		}
+
+		if (typeof element === 'object' && element !== null) {
+			switch (element.$$typeof) {
+				case REACT_ELEMENT_TYPE: {
+					if (before && before.type === element.type) {
+						existingChild.delete(keyToUse)
+						return useFiber(before, element.props)
+					}
+
+					return createFiberFromElement(element)
+				}
+			}
+
+			// TODO 数组类型
+			if (Array.isArray(Object)) {
+				console.warn('未实现数组类型的 child')
+				return null
+			}
+		}
+
+		return null
+	}
+
 	function placeSingleChild(fiber: FiberNode) {
 		if (shouldTrackEffects && fiber.alternate === null) {
 			fiber.flags |= Placement
@@ -121,6 +225,10 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 					}
 					break
 			}
+		}
+
+		if (Array.isArray(newChild)) {
+			return reconcileChildrenArray(returnFiber, currentFiber, newChild)
 		}
 
 		if (typeof newChild === 'string' || typeof newChild === 'number') {
