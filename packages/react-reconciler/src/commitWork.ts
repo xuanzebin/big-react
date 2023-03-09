@@ -2,6 +2,8 @@ import {
 	appendChildToContainer,
 	commitUpdate,
 	Container,
+	insertBeforeChild,
+	Instance,
 	removeChild
 } from 'hostConfig'
 
@@ -149,10 +151,11 @@ function commitPlacement(finishedWork: FiberNode) {
 	}
 
 	const hostParent = getHostParent(finishedWork)
+	const before = getHostSibling(finishedWork)
 
 	if (hostParent === null) return
 
-	appendPlacementNodeIntoContainer(finishedWork, hostParent)
+	appendOrInsertPlacementNodeIntoContainer(finishedWork, hostParent, before)
 }
 
 function getHostParent(finishedWork: FiberNode): Container | null {
@@ -173,23 +176,68 @@ function getHostParent(finishedWork: FiberNode): Container | null {
 	return null
 }
 
-function appendPlacementNodeIntoContainer(
+function getHostSibling(fiber: FiberNode) {
+	let node: FiberNode = fiber
+
+	findSibling: while (node !== null) {
+		while (node.sibling === null) {
+			const parent = node.return
+
+			if (
+				parent === null ||
+				parent.tag === HostRoot ||
+				parent.tag === HostComponent
+			) {
+				return null
+			}
+
+			node = parent
+		}
+
+		node.sibling.return = node.return
+		node = node.sibling
+
+		while (node.tag !== HostText && node.tag !== HostComponent) {
+			if ((node.flags & Placement) !== NoFlags) {
+				continue findSibling
+			}
+
+			if (node.child === null) {
+				continue findSibling
+			} else {
+				node.child.return = node
+				node = node.child
+			}
+		}
+
+		if ((node.flags & Placement) === NoFlags) {
+			return node.stateNode
+		}
+	}
+}
+
+function appendOrInsertPlacementNodeIntoContainer(
 	finishedWork: FiberNode,
-	hostParent: Container
+	hostParent: Container,
+	before?: Instance
 ) {
 	if (finishedWork.tag === HostComponent || finishedWork.tag === HostText) {
-		appendChildToContainer(finishedWork.stateNode, hostParent)
+		if (before) {
+			insertBeforeChild(finishedWork.stateNode, before)
+		} else {
+			appendChildToContainer(finishedWork.stateNode, hostParent)
+		}
 		return
 	}
 
 	const child = finishedWork.child
 
 	if (child !== null) {
-		appendPlacementNodeIntoContainer(child, hostParent)
+		appendOrInsertPlacementNodeIntoContainer(child, hostParent)
 		let sibling: FiberNode | null = child.sibling
 
 		while (sibling !== null) {
-			appendPlacementNodeIntoContainer(sibling, hostParent)
+			appendOrInsertPlacementNodeIntoContainer(sibling, hostParent)
 
 			sibling = sibling.sibling
 		}

@@ -3,8 +3,26 @@ import ReactDOM from 'react-dom/client'
 
 function App() {
 	const [num, dispatch] = useState(100)
+	const arr =
+		num % 2 === 0
+			? [
+					<ul>
+						<li key="1">1</li>
+						<li key="2">2</li>
+						<li key="3">3</li>
+						123
+					</ul>
+			  ]
+			: [
+					<ul>
+						<li key="3">3</li>
+						<li key="2">2</li>
+						<li key="1">1</li>
+						321
+					</ul>
+			  ]
 
-	return <div onClick={() => dispatch(num + 1)}>{num}</div>
+	return <div onClick={() => dispatch(num + 1)}>{arr}</div>
 }
 
 // function Child() {

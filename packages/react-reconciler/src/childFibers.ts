@@ -100,7 +100,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 
 	function reconcileChildrenArray(
 		returnFiber: FiberNode,
-		currentFirstChild: FiberNode,
+		currentFirstChild: FiberNode | null,
 		newChild: any[]
 	) {
 		let lastPlacedIndex = 0
