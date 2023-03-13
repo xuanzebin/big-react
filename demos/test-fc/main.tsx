@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
 
 function App() {
-	const [num, dispatch] = useState(100)
+	const [num, setNum] = useState(100)
 	const arr =
 		num % 2 === 0
 			? [
@@ -22,7 +22,17 @@ function App() {
 					</ul>
 			  ]
 
-	return <div onClick={() => dispatch(num + 1)}>{arr}</div>
+	return (
+		<ul onClickCapture={() => setNum(num + 1)}>
+			<li>4</li>
+			<li>5</li>
+			{arr}
+			<>
+				<div>hi</div>
+				<div>bye</div>
+			</>
+		</ul>
+	)
 }
 
 // function Child() {

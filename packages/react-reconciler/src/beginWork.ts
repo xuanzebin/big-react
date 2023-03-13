@@ -3,6 +3,7 @@ import { ReactElementType } from 'shared/ReactTypes'
 import { FiberNode } from './fiber'
 import { renderWithHooks } from './fiberHooks'
 import {
+	Fragment,
 	FunctionComponent,
 	HostComponent,
 	HostRoot,
@@ -17,6 +18,8 @@ export const beginWork = (wip: FiberNode) => {
 	switch (wip.tag) {
 		case HostRoot:
 			return updateHostRoot(wip)
+		case Fragment:
+			return updateFragment(wip)
 		case HostComponent:
 			return updateHostComponent(wip)
 		case FunctionComponent:
@@ -44,6 +47,14 @@ function updateHostRoot(wip: FiberNode) {
 	wip.memoizedState = memoizedState
 
 	const nextChildren = wip.memoizedState
+
+	reconcileChildren(wip, nextChildren)
+
+	return wip.child
+}
+
+function updateFragment(wip: FiberNode) {
+	const nextChildren = wip.pendingProps
 
 	reconcileChildren(wip, nextChildren)
 

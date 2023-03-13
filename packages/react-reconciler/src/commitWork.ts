@@ -16,6 +16,7 @@ import {
 	Update
 } from './fiberFlags'
 import {
+	Fragment,
 	FunctionComponent,
 	HostComponent,
 	HostRoot,
@@ -78,24 +79,44 @@ const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
 	}
 }
 
+function recordHostChildrenDelete(
+	childToDelete: FiberNode[],
+	unmountFiber: FiberNode
+) {
+	const lastOne = childToDelete[childToDelete.length - 1]
+
+	if (!lastOne) {
+		childToDelete.push(unmountFiber)
+	} else {
+		let node = lastOne.sibling
+
+		while (node !== null) {
+			if (node === unmountFiber) {
+				childToDelete.push(unmountFiber)
+				break
+			}
+
+			node = node.sibling
+		}
+	}
+}
+
 function commitDeletion(chilDeletion: FiberNode) {
-	let rootHostNode: FiberNode | null = null
+	const rootChildToDelete: FiberNode[] = []
 
 	commitNestedComponent(chilDeletion, (unmontFiber: FiberNode) => {
 		switch (unmontFiber.tag) {
 			case HostComponent:
 				// TODO 解绑 ref
-				if (rootHostNode === null) {
-					rootHostNode = unmontFiber
-				}
+				recordHostChildrenDelete(rootChildToDelete, unmontFiber)
 				return
 			case HostText:
-				if (rootHostNode === null) {
-					rootHostNode = unmontFiber
-				}
+				recordHostChildrenDelete(rootChildToDelete, unmontFiber)
 				return
 			case FunctionComponent:
 				// TODO useEffect unmount 解绑 ref
+				return
+			case Fragment:
 				return
 			default:
 				if (__DEV__) {
@@ -105,16 +126,17 @@ function commitDeletion(chilDeletion: FiberNode) {
 		}
 	})
 
-	if (rootHostNode !== null) {
-		const node = rootHostNode as FiberNode
-		const hostParent = getHostParent(rootHostNode)
+	if (rootChildToDelete.length) {
+		const hostParent = getHostParent(chilDeletion)
 
-		if (hostParent !== null) {
-			removeChild(node.stateNode, hostParent)
-		}
+		rootChildToDelete.forEach((node) => {
+			if (hostParent !== null) {
+				removeChild(node.stateNode, hostParent)
+			}
 
-		node.child = null
-		node.return = null
+			node.child = null
+			node.return = null
+		})
 	}
 }
 
