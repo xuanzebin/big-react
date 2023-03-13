@@ -245,7 +245,7 @@ function appendOrInsertPlacementNodeIntoContainer(
 ) {
 	if (finishedWork.tag === HostComponent || finishedWork.tag === HostText) {
 		if (before) {
-			insertBeforeChild(finishedWork.stateNode, before)
+			insertBeforeChild(hostParent, finishedWork.stateNode, before)
 		} else {
 			appendChildToContainer(finishedWork.stateNode, hostParent)
 		}
