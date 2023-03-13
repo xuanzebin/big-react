@@ -182,7 +182,8 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		index: number,
 		element: any
 	) {
-		const keyToUse = element.key !== null ? element.key : index
+		const keyToUse =
+			!Array.isArray(element) && element.key !== null ? element.key : index
 		const before = existingChild.get(keyToUse)
 
 		if (typeof element === 'string' || typeof element === 'number') {

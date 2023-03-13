@@ -24,13 +24,13 @@ function App() {
 
 	return (
 		<ul onClickCapture={() => setNum(num + 1)}>
+			{arr}
 			<li>4</li>
 			<li>5</li>
-			{arr}
-			<>
-				<div>hi</div>
-				<div>bye</div>
-			</>
+			{/* <>
+				<li>4</li>
+				<li>5</li>
+			</> */}
 		</ul>
 	)
 }
