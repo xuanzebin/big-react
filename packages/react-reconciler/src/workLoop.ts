@@ -4,11 +4,19 @@ import { completeWork } from './completeWork'
 import { HostRoot } from './workTags'
 import { commitMutationEffects } from './commitWork'
 import { MutationMask, NoFlags } from './fiberFlags'
-import { Lane, mergeLanes } from './fiberLanes'
+import {
+	getHighestPriorityLane,
+	Lane,
+	mergeLanes,
+	NoLane,
+	SyncLane
+} from './fiberLanes'
+import { flushSyncCallbackQueue, scheduleSyncCallback } from './syncTaskQueue'
+import { scheduleMicroTask } from 'hostConfig'
 
 let workInProgress: FiberNode | null = null
 
-function prepareFreshStack(root: FiberRootNode) {
+function prepareFreshStack(root: FiberRootNode, lane: Lane) {
 	workInProgress = createWorInProgress(root.current, {})
 }
 
@@ -16,11 +24,31 @@ export function scheduleUpdateOnFiber(fiber: FiberNode, lane: Lane) {
 	const root = markUpdateFromFiberToRoot(fiber)
 
 	markRootUpdated(root, lane)
-	renderRoot(root)
+	ensureRootIsScheduled(root)
 }
 
 function markRootUpdated(root: FiberRootNode, lane: Lane) {
 	root.pendingLanes = mergeLanes(root.pendingLanes, lane)
+}
+
+function ensureRootIsScheduled(root: FiberRootNode) {
+	const updateLane = getHighestPriorityLane(root.pendingLanes)
+
+	if (updateLane === NoLane) {
+		return
+	}
+
+	if (updateLane === SyncLane) {
+		// 同步调度 微任务
+		if (__DEV__) {
+			console.log('同步调度开始')
+		}
+
+		scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root, updateLane))
+		scheduleMicroTask(flushSyncCallbackQueue)
+	} else {
+		// 异步调度 宏任务
+	}
 }
 
 function markUpdateFromFiberToRoot(fiber: FiberNode) {
@@ -39,9 +67,16 @@ function markUpdateFromFiberToRoot(fiber: FiberNode) {
 	return null
 }
 
-function renderRoot(root: FiberRootNode) {
+function performSyncWorkOnRoot(root: FiberRootNode, lane: Lane) {
+	const nextLane = getHighestPriorityLane(root.pendingLanes)
+
+	if (nextLane !== SyncLane) {
+		ensureRootIsScheduled(root)
+		return
+	}
+
 	// 初始化
-	prepareFreshStack(root)
+	prepareFreshStack(root, lane)
 
 	do {
 		try {

@@ -62,3 +62,10 @@ export const removeChild = (
 ) => {
 	parent.removeChild(childNode)
 }
+
+export const scheduleMicroTask =
+	typeof queueMicrotask === 'function'
+		? queueMicrotask
+		: typeof Promise === 'function'
+		? (cb: (...args: any) => void) => Promise.resolve().then(cb)
+		: setTimeout
