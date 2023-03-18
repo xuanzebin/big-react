@@ -11,6 +11,7 @@ import {
 } from './updateQueue'
 import { FiberNode } from './fiber'
 import { scheduleUpdateOnFiber } from './workLoop'
+import { requestUpdateLane } from './fiberLanes'
 
 export interface Hook {
 	memorizedState: any
@@ -100,9 +101,11 @@ function dispatchSetState<State>(
 	queue: UpdateQueue<State>,
 	action: Action<State>
 ) {
-	const update = createUpdate(action)
+	const lane = requestUpdateLane()
+	const update = createUpdate(action, lane)
+
 	enqueueUpdate(queue, update)
-	scheduleUpdateOnFiber(fiber)
+	scheduleUpdateOnFiber(fiber, lane)
 }
 
 function updateWorkInProgressHook() {

@@ -1,8 +1,9 @@
 import { Container } from 'hostConfig'
 import { Props, Key, Ref, ReactElementType } from 'shared/ReactTypes'
 
-import { FunctionComponent, HostComponent, WorkTag, Fragment } from './workTags'
 import { Flags, NoFlags } from './fiberFlags'
+import { Lanes, NoLanes } from './fiberLanes'
+import { FunctionComponent, HostComponent, WorkTag, Fragment } from './workTags'
 
 export class FiberNode {
 	ref: Ref
@@ -70,11 +71,16 @@ export class FiberRootNode {
 	container: Container
 	current: FiberNode
 	finishedWork: FiberNode | null
+	pendingLanes: Lanes
+	finishedLanes: Lanes
 
 	constructor(container: Container, hostRootFiber: FiberNode) {
 		this.container = container
 		this.current = hostRootFiber
 		this.finishedWork = null
+		this.pendingLanes = NoLanes
+		this.finishedLanes = NoLanes
+
 		hostRootFiber.stateNode = this
 	}
 }
