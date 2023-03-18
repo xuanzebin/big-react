@@ -55,21 +55,38 @@ export function enqueueUpdate<State>(
 
 export function processUpdateQueue<State>(
 	baseState: State,
-	pendingUpdate: Update<State> | null
+	pendingUpdate: Update<State> | null,
+	renderLane: Lane
 ): { memoizedState: State } {
-	let result: ReturnType<typeof processUpdateQueue<State>> = {
+	const result: ReturnType<typeof processUpdateQueue<State>> = {
 		memoizedState: baseState
 	}
 
 	if (pendingUpdate !== null) {
-		const action = pendingUpdate.action
+		const first = pendingUpdate.next
+		let pending = pendingUpdate.next
 
-		if (action instanceof Function) {
-			result = { memoizedState: action(baseState) }
-		} else {
-			result = { memoizedState: action }
-		}
+		do {
+			const action = pending?.action
+			const updateLane = pending?.lane
+
+			if (updateLane === renderLane) {
+				if (action instanceof Function) {
+					baseState = action(baseState)
+				} else {
+					baseState = action
+				}
+
+				pending = pending?.next as Update<State>
+			} else {
+				if (__DEV__) {
+					console.error('暂时不应该进入这里，因为目前的更新应该都是同步更新')
+				}
+			}
+		} while (pending !== first)
 	}
+
+	result.memoizedState = baseState
 
 	return result
 }

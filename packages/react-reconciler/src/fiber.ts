@@ -72,14 +72,14 @@ export class FiberRootNode {
 	current: FiberNode
 	finishedWork: FiberNode | null
 	pendingLanes: Lanes
-	finishedLanes: Lanes
+	finishedLane: Lanes
 
 	constructor(container: Container, hostRootFiber: FiberNode) {
 		this.container = container
 		this.current = hostRootFiber
 		this.finishedWork = null
 		this.pendingLanes = NoLanes
-		this.finishedLanes = NoLanes
+		this.finishedLane = NoLanes
 
 		hostRootFiber.stateNode = this
 	}

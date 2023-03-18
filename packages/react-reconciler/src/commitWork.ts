@@ -58,16 +58,22 @@ const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
 	const flags = finishedWork.flags
 
 	if ((flags & Placement) !== NoFlags) {
+		if (__DEV__) console.warn('执行 Placement')
+
 		commitPlacement(finishedWork)
 		finishedWork.flags &= ~Placement
 	}
 
 	if ((flags & Update) !== NoFlags) {
+		if (__DEV__) console.warn('执行 Update')
+
 		commitUpdate(finishedWork)
 		finishedWork.flags &= ~Update
 	}
 
 	if ((flags & ChildDeletion) !== NoFlags) {
+		if (__DEV__) console.warn('执行 ChildDeletion')
+
 		const chilDeletions = finishedWork.deletions
 
 		if (chilDeletions !== null) {
@@ -168,10 +174,6 @@ function commitNestedComponent(
 }
 
 function commitPlacement(finishedWork: FiberNode) {
-	if (__DEV__) {
-		console.warn('执行 Placement')
-	}
-
 	const hostParent = getHostParent(finishedWork)
 	const before = getHostSibling(finishedWork)
 
