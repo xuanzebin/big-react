@@ -3,6 +3,7 @@ import { Dispatch } from 'react/src/currentDispatcher'
 
 export interface Update<State> {
 	action: Action<State>
+	next: Update<any> | null
 }
 
 export interface UpdateQueue<State> {
@@ -14,7 +15,8 @@ export interface UpdateQueue<State> {
 
 export function createUpdate<State>(action: Action<State>): Update<State> {
 	return {
-		action
+		action,
+		next: null
 	}
 }
 
@@ -33,6 +35,15 @@ export function enqueueUpdate<State>(
 	queue: UpdateQueue<State>,
 	update: Update<State>
 ) {
+	const pending = queue.shared.pending
+
+	if (pending === null) {
+		update.next = update
+	} else {
+		update.next = pending.next
+		pending.next = update
+	}
+
 	queue.shared.pending = update
 }
 
