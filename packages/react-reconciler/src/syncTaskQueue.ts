@@ -1,7 +1,6 @@
 export type syncCallback = (...args: any) => void
 
 let isFlushSyncScheduled = false
-// TODO: 需要清理已经执行的 callback
 let syncQueue: ((...args: any) => void)[] | null = null
 
 export function scheduleSyncCallback(callback: syncCallback) {
@@ -24,6 +23,7 @@ export function flushSyncCallbackQueue() {
 			}
 		} finally {
 			isFlushSyncScheduled = false
+			syncQueue = null
 		}
 	}
 }

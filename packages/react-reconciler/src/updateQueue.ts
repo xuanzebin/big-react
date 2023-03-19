@@ -57,9 +57,9 @@ export function processUpdateQueue<State>(
 	baseState: State,
 	pendingUpdate: Update<State> | null,
 	renderLane: Lane
-): { memoizedState: State } {
+): { memorizedState: State } {
 	const result: ReturnType<typeof processUpdateQueue<State>> = {
-		memoizedState: baseState
+		memorizedState: baseState
 	}
 
 	if (pendingUpdate !== null) {
@@ -72,6 +72,7 @@ export function processUpdateQueue<State>(
 
 			if (updateLane === renderLane) {
 				if (action instanceof Function) {
+					console.log(baseState, action(baseState))
 					baseState = action(baseState)
 				} else {
 					baseState = action
@@ -86,7 +87,7 @@ export function processUpdateQueue<State>(
 		} while (pending !== first)
 	}
 
-	result.memoizedState = baseState
+	result.memorizedState = baseState
 
 	return result
 }

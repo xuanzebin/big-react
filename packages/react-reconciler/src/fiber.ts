@@ -20,7 +20,7 @@ export class FiberNode {
 
 	stateNode: any
 
-	memoizedState: any
+	memorizedState: any
 
 	subtreeFlags: Flags
 
@@ -56,7 +56,7 @@ export class FiberNode {
 		this.type = null
 
 		this.memoizedProps = null
-		this.memoizedState = null
+		this.memorizedState = null
 		this.pendingProps = pendingProps
 		this.updateQueue = null
 
@@ -106,7 +106,7 @@ export function createWorInProgress(current: FiberNode, pendingProps: Props) {
 	wip.child = current.child
 	wip.updateQueue = current.updateQueue
 	wip.memoizedProps = current.memoizedProps
-	wip.memoizedState = current.memoizedState
+	wip.memorizedState = current.memorizedState
 
 	return wip
 }

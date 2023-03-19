@@ -38,20 +38,20 @@ export const beginWork = (wip: FiberNode, renderLane: Lane) => {
 }
 
 function updateHostRoot(wip: FiberNode, renderLane: Lane) {
-	const baseState = wip.memoizedState
+	const baseState = wip.memorizedState
 	const updateQueue = wip.updateQueue as UpdateQueue<ReactElementType>
 	const pendingUpdate = updateQueue.shared.pending
 
 	updateQueue.shared.pending = null
-	const { memoizedState } = processUpdateQueue(
+	const { memorizedState } = processUpdateQueue(
 		baseState,
 		pendingUpdate,
 		renderLane
 	)
 
-	wip.memoizedState = memoizedState
+	wip.memorizedState = memorizedState
 
-	const nextChildren = wip.memoizedState
+	const nextChildren = wip.memorizedState
 
 	reconcileChildren(wip, nextChildren)
 

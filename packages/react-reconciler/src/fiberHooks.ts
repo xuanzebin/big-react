@@ -29,7 +29,7 @@ const { currentDispatcher } = internals
 export function renderWithHooks(wip: FiberNode, renderLane: Lane) {
 	currentlyRenderingFiber = wip
 	workInProgressLane = renderLane
-	wip.memoizedState = null
+	wip.memorizedState = null
 
 	const current = wip.alternate
 
@@ -63,17 +63,22 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 
 function updateState<State>(): [State, Dispatch<State>] {
 	const hook = updateWorkInProgressHook()
-
 	const queue = hook.updateQueue as UpdateQueue<State>
 	const pending = queue.shared.pending
 
-	const { memoizedState } = processUpdateQueue(
-		hook.memorizedState,
-		pending,
-		workInProgressLane
-	)
+	queue.shared.pending = null
 
-	return [memoizedState, queue.dispatch as Dispatch<State>]
+	if (pending !== null) {
+		const { memorizedState } = processUpdateQueue(
+			hook.memorizedState,
+			pending,
+			workInProgressLane
+		)
+
+		hook.memorizedState = memorizedState
+	}
+
+	return [hook.memorizedState, queue.dispatch as Dispatch<State>]
 }
 
 function mountState<State>(
@@ -81,16 +86,16 @@ function mountState<State>(
 ): [State, Dispatch<State>] {
 	const hook = mountWorkInProgressHook()
 
-	let memoizedState
+	let memorizedState
 	if (typeof initialState === 'function') {
-		memoizedState = initialState()
+		memorizedState = initialState()
 	} else {
-		memoizedState = initialState
+		memorizedState = initialState
 	}
 
 	const queue = createUpdateQueue<State>()
 	hook.updateQueue = queue
-	hook.memorizedState = memoizedState
+	hook.memorizedState = memorizedState
 
 	// @ts-ignore
 	const dispatch = dispatchSetState.bind(
@@ -100,7 +105,7 @@ function mountState<State>(
 	)
 	queue.dispatch = dispatch
 
-	return [memoizedState, dispatch]
+	return [memorizedState, dispatch]
 }
 
 function dispatchSetState<State>(
@@ -122,7 +127,7 @@ function updateWorkInProgressHook() {
 	if (currentHook === null) {
 		const current = currentlyRenderingFiber?.alternate
 		if (current !== null) {
-			nextCurrentHook = (current as FiberNode).memoizedState
+			nextCurrentHook = (current as FiberNode).memorizedState
 		} else {
 			nextCurrentHook = null
 		}
@@ -137,6 +142,7 @@ function updateWorkInProgressHook() {
 	}
 
 	currentHook = nextCurrentHook
+
 	const nextHook: Hook = {
 		memorizedState: currentHook?.memorizedState,
 		updateQueue: currentHook?.updateQueue,
@@ -147,7 +153,7 @@ function updateWorkInProgressHook() {
 			throw new Error('hooks 只能在函数组件中使用')
 		} else {
 			workInProgressHook = nextHook
-			currentlyRenderingFiber.memoizedState = nextHook
+			currentlyRenderingFiber.memorizedState = nextHook
 		}
 	} else {
 		workInProgressHook.next = nextHook
@@ -169,7 +175,7 @@ function mountWorkInProgressHook() {
 			throw new Error('hooks 只能在函数组件中使用')
 		} else {
 			workInProgressHook = hook
-			currentlyRenderingFiber.memoizedState = hook
+			currentlyRenderingFiber.memorizedState = hook
 		}
 	} else {
 		workInProgressHook.next = hook
