@@ -12,11 +12,28 @@ import {
 import { FiberNode } from './fiber'
 import { scheduleUpdateOnFiber } from './workLoop'
 import { Lane, NoLane, requestUpdateLane } from './fiberLanes'
+import { Flags, PassiveEfeect } from './fiberFlags'
+import { HookHasEffect, Passive } from './hooksEffectTags'
 
 export interface Hook {
 	memorizedState: any
 	updateQueue: unknown
 	next: Hook | null
+}
+
+export interface Effect {
+	tag: Flags
+	create: EffectCallback | void
+	destroy: EffectCallback | void
+	deps: EffectDeps
+	next: Effect | null
+}
+
+type EffectCallback = () => void
+type EffectDeps = any[] | null
+
+export interface FCUpdateQueue<State> extends UpdateQueue<State> {
+	lastEffect: Effect | null
 }
 
 let currentHook: Hook | null = null
@@ -54,31 +71,13 @@ export function renderWithHooks(wip: FiberNode, renderLane: Lane) {
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
-	useState: mountState
+	useState: mountState,
+	useEffect: mountEffect
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
-	useState: updateState
-}
-
-function updateState<State>(): [State, Dispatch<State>] {
-	const hook = updateWorkInProgressHook()
-	const queue = hook.updateQueue as UpdateQueue<State>
-	const pending = queue.shared.pending
-
-	queue.shared.pending = null
-
-	if (pending !== null) {
-		const { memorizedState } = processUpdateQueue(
-			hook.memorizedState,
-			pending,
-			workInProgressLane
-		)
-
-		hook.memorizedState = memorizedState
-	}
-
-	return [hook.memorizedState, queue.dispatch as Dispatch<State>]
+	useState: updateState,
+	useEffect: updateEffect
 }
 
 function mountState<State>(
@@ -106,6 +105,91 @@ function mountState<State>(
 	queue.dispatch = dispatch
 
 	return [memorizedState, dispatch]
+}
+
+function updateState<State>(): [State, Dispatch<State>] {
+	const hook = updateWorkInProgressHook()
+	const queue = hook.updateQueue as UpdateQueue<State>
+	const pending = queue.shared.pending
+
+	queue.shared.pending = null
+
+	if (pending !== null) {
+		const { memorizedState } = processUpdateQueue(
+			hook.memorizedState,
+			pending,
+			workInProgressLane
+		)
+
+		hook.memorizedState = memorizedState
+	}
+
+	return [hook.memorizedState, queue.dispatch as Dispatch<State>]
+}
+
+function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+	const hook = updateWorkInProgressHook()
+	const nextDeps = deps === undefined ? null : deps
+
+	;(currentlyRenderingFiber as FiberNode).flags |= PassiveEfeect
+
+	hook.memorizedState = pushEffect(
+		Passive | HookHasEffect,
+		create,
+		undefined,
+		nextDeps
+	)
+}
+
+function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+	// empty
+}
+
+function pushEffect(
+	hookFlags: Flags,
+	create: EffectCallback | void,
+	destroy: EffectCallback | void,
+	deps: EffectDeps
+): Effect {
+	const effect: Effect = {
+		tag: hookFlags,
+		create,
+		destroy,
+		deps,
+		next: null
+	}
+	const fiber = currentlyRenderingFiber as FiberNode
+	let updateQueue = fiber.updateQueue as FCUpdateQueue<any>
+
+	if (!updateQueue) {
+		updateQueue = createFCUpdateQueue()
+		fiber.updateQueue = updateQueue
+		effect.next = effect
+		updateQueue.lastEffect = effect
+	} else {
+		const lastEffect = updateQueue.lastEffect
+
+		if (!lastEffect) {
+			effect.next = effect
+			updateQueue.lastEffect = effect
+		} else {
+			const firstEffect = lastEffect.next
+
+			effect.next = firstEffect
+			lastEffect.next = effect
+			updateQueue.lastEffect = effect
+		}
+	}
+
+	return effect
+}
+
+function createFCUpdateQueue<State>() {
+	const updateQueue = createUpdateQueue<State>() as FCUpdateQueue<State>
+
+	updateQueue.lastEffect = null
+
+	return updateQueue
 }
 
 function dispatchSetState<State>(
