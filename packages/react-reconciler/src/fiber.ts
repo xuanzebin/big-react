@@ -2,6 +2,7 @@ import { Container } from 'hostConfig'
 import { Props, Key, Ref, ReactElementType } from 'shared/ReactTypes'
 
 import { Flags, NoFlags } from './fiberFlags'
+import { Effect } from './fiberHooks'
 import { Lanes, NoLanes } from './fiberLanes'
 import { FunctionComponent, HostComponent, WorkTag, Fragment } from './workTags'
 
@@ -67,12 +68,18 @@ export class FiberNode {
 	}
 }
 
+export interface PengdingPssiveEffects {
+	update: Effect[]
+	unmount: Effect[]
+}
+
 export class FiberRootNode {
 	container: Container
 	current: FiberNode
 	finishedWork: FiberNode | null
 	pendingLanes: Lanes
 	finishedLane: Lanes
+	pendingPassiveEffects: PengdingPssiveEffects
 
 	constructor(container: Container, hostRootFiber: FiberNode) {
 		this.container = container
@@ -80,6 +87,10 @@ export class FiberRootNode {
 		this.finishedWork = null
 		this.pendingLanes = NoLanes
 		this.finishedLane = NoLanes
+		this.pendingPassiveEffects = {
+			update: [],
+			unmount: []
+		}
 
 		hostRootFiber.stateNode = this
 	}

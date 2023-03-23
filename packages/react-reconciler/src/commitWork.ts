@@ -7,14 +7,18 @@ import {
 	removeChild
 } from 'hostConfig'
 
-import { FiberNode, FiberRootNode } from './fiber'
+import { FiberNode, FiberRootNode, PengdingPssiveEffects } from './fiber'
 import {
 	ChildDeletion,
+	Flags,
 	MutationMask,
 	NoFlags,
+	PassiveEffect,
 	Placement,
 	Update
 } from './fiberFlags'
+import { Effect, FCUpdateQueue } from './fiberHooks'
+import { HookHasEffect } from './hooksEffectTags'
 import {
 	Fragment,
 	FunctionComponent,
@@ -25,21 +29,24 @@ import {
 
 let nextEffect: FiberNode | null = null
 
-export const commitMutationEffects = (finishedWork: FiberNode) => {
+export const commitMutationEffects = (
+	finishedWork: FiberNode,
+	root: FiberRootNode
+) => {
 	nextEffect = finishedWork
 
 	while (nextEffect !== null) {
 		const child: FiberNode | null = nextEffect.child
 
 		if (
-			(nextEffect.subtreeFlags & MutationMask) !== NoFlags &&
+			(nextEffect.subtreeFlags & (MutationMask | PassiveEffect)) !== NoFlags &&
 			child !== null
 		) {
 			nextEffect = child
 		} else {
 			// 向上遍历
 			up: while (nextEffect !== null) {
-				commitMutationEffectsOnFiber(nextEffect)
+				commitMutationEffectsOnFiber(nextEffect, root)
 
 				const sibling: FiberNode | null = nextEffect.sibling
 
@@ -54,7 +61,10 @@ export const commitMutationEffects = (finishedWork: FiberNode) => {
 	}
 }
 
-const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
+const commitMutationEffectsOnFiber = (
+	finishedWork: FiberNode,
+	root: FiberRootNode
+) => {
 	const flags = finishedWork.flags
 
 	if ((flags & Placement) !== NoFlags) {
@@ -78,11 +88,88 @@ const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
 
 		if (chilDeletions !== null) {
 			chilDeletions.forEach((child) => {
-				commitDeletion(child)
+				commitDeletion(child, root)
 			})
 		}
 		finishedWork.flags &= ~ChildDeletion
 	}
+
+	if ((flags & PassiveEffect) !== NoFlags) {
+		commitPassiveEffect(finishedWork, root, 'update')
+		finishedWork.flags &= ~PassiveEffect
+	}
+}
+
+function commitPassiveEffect(
+	fiber: FiberNode,
+	root: FiberRootNode,
+	type: keyof PengdingPssiveEffects
+) {
+	if (
+		fiber.tag !== FunctionComponent ||
+		(type === 'update' && (fiber.flags & PassiveEffect) === NoFlags)
+	) {
+		return
+	}
+
+	const updateQueue = fiber.updateQueue as FCUpdateQueue<any>
+
+	if (updateQueue !== null) {
+		if (updateQueue.lastEffect === null) {
+			console.error('当 FC 存在 PassiveEffect，updateQueue 不应该为 null')
+			return
+		}
+
+		root.pendingPassiveEffects[type].push(updateQueue.lastEffect)
+	}
+}
+
+function commitHookEffectList(
+	flags: Flags,
+	lastEffect: Effect,
+	callback: (effect: Effect) => void
+) {
+	let effect = lastEffect.next as Effect
+
+	do {
+		if ((effect.tag & flags) === flags) {
+			callback(effect)
+		}
+
+		effect = effect.next as Effect
+	} while (effect !== lastEffect.next)
+}
+
+export function commitHookEffectListUnmount(flags: Flags, lastEffect: Effect) {
+	commitHookEffectList(flags, lastEffect, (effect: Effect) => {
+		const { destroy } = effect
+
+		if (typeof destroy === 'function') {
+			destroy()
+		}
+
+		effect.tag &= ~HookHasEffect
+	})
+}
+
+export function commitHookEffectListDestroy(flags: Flags, lastEffect: Effect) {
+	commitHookEffectList(flags, lastEffect, (effect: Effect) => {
+		const { destroy } = effect
+
+		if (typeof destroy === 'function') {
+			destroy()
+		}
+	})
+}
+
+export function commitHookEffectListCreate(flags: Flags, lastEffect: Effect) {
+	commitHookEffectList(flags, lastEffect, (effect: Effect) => {
+		const { create } = effect
+
+		if (typeof create === 'function') {
+			effect.destroy = create()
+		}
+	})
 }
 
 function recordHostChildrenDelete(
@@ -107,7 +194,7 @@ function recordHostChildrenDelete(
 	}
 }
 
-function commitDeletion(chilDeletion: FiberNode) {
+function commitDeletion(chilDeletion: FiberNode, root: FiberRootNode) {
 	const rootChildToDelete: FiberNode[] = []
 
 	commitNestedComponent(chilDeletion, (unmontFiber: FiberNode) => {
@@ -121,6 +208,7 @@ function commitDeletion(chilDeletion: FiberNode) {
 				return
 			case FunctionComponent:
 				// TODO useEffect unmount 解绑 ref
+				commitPassiveEffect(unmontFiber, root, 'unmount')
 				return
 			case Fragment:
 				return
