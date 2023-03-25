@@ -25,7 +25,7 @@ export const appendInitialChild = (
 	return parent.appendChild(child)
 }
 
-export const insertBeforeChild = (
+export const insertChildToContainer = (
 	parent: Container,
 	child: Instance,
 	before: Instance
@@ -38,8 +38,7 @@ export const appendChildToContainer = appendInitialChild
 export const commitUpdate = (fiber: FiberNode) => {
 	switch (fiber.tag) {
 		case HostComponent:
-			// TODO
-			break
+			return updateFiberProps(fiber.stateNode, fiber.memoizedProps)
 		case HostText:
 			const text = fiber.memoizedProps.content
 

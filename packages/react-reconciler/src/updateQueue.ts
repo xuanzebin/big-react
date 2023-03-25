@@ -72,7 +72,6 @@ export function processUpdateQueue<State>(
 
 			if (updateLane === renderLane) {
 				if (action instanceof Function) {
-					console.log(baseState, action(baseState))
 					baseState = action(baseState)
 				} else {
 					baseState = action
