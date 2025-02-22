@@ -1,6 +1,6 @@
 import { Action } from 'shared/ReactTypes'
 import { Dispatch } from 'react/src/currentDispatcher'
-import { Lane } from './fiberLanes'
+import { isSubsetOfLanes, Lane } from './fiberLanes'
 
 export interface Update<State> {
 	action: Action<State>
@@ -57,37 +57,67 @@ export function processUpdateQueue<State>(
 	baseState: State,
 	pendingUpdate: Update<State> | null,
 	renderLane: Lane
-): { memorizedState: State } {
+): {
+	baseState: State;
+	memorizedState: State;
+	baseQueue: Update<State> | null;
+} {
 	const result: ReturnType<typeof processUpdateQueue<State>> = {
-		memorizedState: baseState
+		baseState,
+		baseQueue: null,
+		memorizedState: baseState,
 	}
 
 	if (pendingUpdate !== null) {
 		const first = pendingUpdate.next
-		let pending = pendingUpdate.next
+		let pending = pendingUpdate.next as Update<any>
+
+		let newBaseState = baseState
+		let newState = baseState
+		let newBaseQueueFirst: Update<State> | null = null
+		let newBaseQueueLast: Update<State> | null = null
 
 		do {
 			const action = pending?.action
-			const updateLane = pending?.lane
+			const updateLane = pending?.lane as Lane
 
-			if (updateLane === renderLane) {
+			if (!isSubsetOfLanes(renderLane, updateLane)) {
+				const clone = createUpdate(pending.action, pending.lane)
+				if (newBaseQueueFirst === null) {
+					newBaseQueueFirst = clone
+					newBaseQueueLast = clone
+					newBaseState = newState
+				} else {
+					(newBaseQueueLast as Update<State>).next = clone
+					newBaseQueueLast = clone
+				}
+			} else {
+				if (newBaseQueueLast !== null) {
+					const clone = createUpdate(pending.action, pending.lane)
+					newBaseQueueLast.next = clone
+					newBaseQueueLast = clone
+				}
 				// 像 ContainerRoot 的 action 是 container 对应的 ReactElement 整棵树
 				if (action instanceof Function) {
-					baseState = action(baseState)
+					newState = action(newState)
 				} else {
-					baseState = action
+					newState = action
 				}
 
 				pending = pending?.next as Update<State>
-			} else {
-				if (__DEV__) {
-					console.error('暂时不应该进入这里，因为目前的更新应该都是同步更新')
-				}
 			}
 		} while (pending !== first)
-	}
 
-	result.memorizedState = baseState
+		if (newBaseQueueLast === null) {
+			newBaseState = newState
+		} else {
+			newBaseQueueLast.next = newBaseQueueFirst
+		}
+
+		result.memorizedState = newState
+		result.baseQueue = newBaseQueueLast
+		result.baseState = newBaseState
+	}
 
 	return result
 }

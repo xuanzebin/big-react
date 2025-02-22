@@ -7,7 +7,8 @@ import {
 	createUpdate,
 	enqueueUpdate,
 	createUpdateQueue,
-	processUpdateQueue
+	processUpdateQueue,
+	Update
 } from './updateQueue'
 import { FiberNode } from './fiber'
 import { scheduleUpdateOnFiber } from './workLoop'
@@ -18,6 +19,8 @@ import { HookHasEffect, Passive } from './hooksEffectTags'
 export interface Hook {
 	memorizedState: any
 	updateQueue: unknown
+	baseState: any;
+	baseQueue: Update<any> | null;
 	next: Hook | null
 }
 
@@ -101,7 +104,7 @@ function mountState<State>(
 	const dispatch = dispatchSetState.bind(
 		null,
 		currentlyRenderingFiber,
-		hook.updateQueue
+		hook.updateQueue as UpdateQueue<unknown>
 	)
 	queue.dispatch = dispatch
 
@@ -112,17 +115,31 @@ function updateState<State>(): [State, Dispatch<State>] {
 	const hook = updateWorkInProgressHook()
 	const queue = hook.updateQueue as UpdateQueue<State>
 	const pending = queue.shared.pending
-
-	queue.shared.pending = null
+	
+	const current = currentHook as Hook
+	let baseQueue = current.baseQueue
+	const baseState = current.baseState
 
 	if (pending !== null) {
-		const { memorizedState } = processUpdateQueue(
-			hook.memorizedState,
-			pending,
+		if (baseQueue !== null) {
+			const pendingFirst = pending.next
+			const baseFirst = baseQueue.next
+			pending.next = baseFirst
+			baseQueue.next = pendingFirst
+		}
+		baseQueue = pending
+		current.baseQueue = baseQueue
+		queue.shared.pending = null
+
+		const { memorizedState, baseState: newBaseState, baseQueue: newBaseQueue } = processUpdateQueue(
+			baseState,
+			baseQueue,
 			workInProgressLane
 		)
 
 		hook.memorizedState = memorizedState
+		hook.baseState = newBaseState
+		hook.baseQueue = newBaseQueue
 	}
 
 	return [hook.memorizedState, queue.dispatch as Dispatch<State>]
@@ -233,10 +250,12 @@ function createFCUpdateQueue<State>() {
 }
 
 function dispatchSetState<State>(
-	fiber: FiberNode,
+	fiber: FiberNode | null,
 	queue: UpdateQueue<State>,
 	action: Action<State>
 ) {
+	if (fiber === null) return
+
 	const lane = requestUpdateLane()
 	const update = createUpdate(action, lane)
 
@@ -270,7 +289,9 @@ function updateWorkInProgressHook() {
 	const nextHook: Hook = {
 		memorizedState: currentHook?.memorizedState,
 		updateQueue: currentHook?.updateQueue,
-		next: null
+		next: null,
+		baseState: currentHook?.baseState,
+		baseQueue: currentHook?.baseQueue
 	}
 	if (workInProgressHook === null) {
 		if (currentlyRenderingFiber === null) {
@@ -291,7 +312,9 @@ function mountWorkInProgressHook() {
 	const hook: Hook = {
 		memorizedState: null,
 		updateQueue: null,
-		next: null
+		next: null,
+		baseState: null,
+		baseQueue: null
 	}
 
 	if (workInProgressHook === null) {

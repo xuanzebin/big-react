@@ -1,32 +1,23 @@
-import { useState, useEffect } from 'react'
-import ReactDOM from 'react-dom'
+import { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 
 function App() {
-	useEffect(() => {
-		console.log('effect')
-		return () => {
-			console.log('cleanup')
-		}
-	}, [])
+	const [num, update] = useState(100);
 	return (
-		<div>
-			<Child />
-			<div>hello world</div>
-		</div>
-	)
+		<ul onClick={() => update(50)}>
+			{new Array(num).fill(0).map((_, i) => {
+				return <Child key={i}>{i}</Child>;
+			})}
+		</ul>
+	);
 }
 
-function Child() {
-	return 'Child'
+function Child({ children }) {
+	const now = performance.now();
+	while (performance.now() - now < 4) {}
+	return <li>{children}</li>;
 }
 
-const container = document.getElementById('root')
-const root = ReactDOM.createRoot(container)
+const root = ReactDOM.createRoot(document.querySelector('#root'));
 
-root.render(<App />)
-
-
-setTimeout(() => {
-	root.render(null)
-}, 100)
-window.root = root
+root.render(<App />);
