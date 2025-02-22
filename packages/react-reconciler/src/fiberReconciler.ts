@@ -11,6 +11,7 @@ import { FiberNode, FiberRootNode } from './fiber'
 import { scheduleUpdateOnFiber } from './workLoop'
 import { ReactElementType } from 'shared/ReactTypes'
 import { requestUpdateLane } from './fiberLanes'
+import { unstable_ImmediatePriority, unstable_runWithPriority } from 'scheduler'
 
 export function createContainer(container: Container) {
 	const hostRootFiber = new FiberNode(HostRoot, {}, null)
@@ -25,15 +26,17 @@ export function updateContainer(
 	element: ReactElementType | null,
 	root: FiberRootNode
 ) {
-	const lane = requestUpdateLane()
-	const update = createUpdate(element, lane)
-	const hostRootFiber = root.current
+	unstable_runWithPriority(unstable_ImmediatePriority, () => {
+		const lane = requestUpdateLane()
+		const update = createUpdate(element, lane)
+		const hostRootFiber = root.current
 
-	enqueueUpdate(
-		hostRootFiber.updateQueue as UpdateQueue<ReactElementType | null>,
-		update
-	)
-	scheduleUpdateOnFiber(hostRootFiber, lane)
+		enqueueUpdate(
+			hostRootFiber.updateQueue as UpdateQueue<ReactElementType | null>,
+			update
+		)
+		scheduleUpdateOnFiber(hostRootFiber, lane)
+	})
 
 	return element
 }

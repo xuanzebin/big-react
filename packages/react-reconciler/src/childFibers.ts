@@ -63,6 +63,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 						return existing
 					} else {
 						deleteRemainingChild(returnFiber, currentFiber)
+						break
 					}
 				} else {
 					console.warn('还未实现的 react 类型', newChild)
