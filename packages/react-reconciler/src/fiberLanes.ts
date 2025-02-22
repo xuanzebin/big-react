@@ -1,4 +1,10 @@
-import { unstable_getCurrentPriorityLevel, unstable_IdlePriority, unstable_ImmediatePriority, unstable_NormalPriority, unstable_UserBlockingPriority } from 'scheduler'
+import {
+	unstable_getCurrentPriorityLevel,
+	unstable_IdlePriority,
+	unstable_ImmediatePriority,
+	unstable_NormalPriority,
+	unstable_UserBlockingPriority
+} from 'scheduler'
 import { FiberRootNode } from './fiber'
 
 export type Lane = number
@@ -18,7 +24,7 @@ export function mergeLanes(laneA: Lane, laneB: Lane): Lanes {
 export function requestUpdateLane(): Lane {
 	const currentSchedulerPriority = unstable_getCurrentPriorityLevel()
 	const lane = schedulerPriorityToLane(currentSchedulerPriority)
-	
+
 	return lane
 }
 

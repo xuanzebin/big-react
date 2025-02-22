@@ -19,8 +19,8 @@ import { HookHasEffect, Passive } from './hooksEffectTags'
 export interface Hook {
 	memorizedState: any
 	updateQueue: unknown
-	baseState: any;
-	baseQueue: Update<any> | null;
+	baseState: any
+	baseQueue: Update<any> | null
 	next: Hook | null
 }
 
@@ -115,7 +115,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 	const hook = updateWorkInProgressHook()
 	const queue = hook.updateQueue as UpdateQueue<State>
 	const pending = queue.shared.pending
-	
+
 	const current = currentHook as Hook
 	let baseQueue = current.baseQueue
 	const baseState = current.baseState
@@ -131,11 +131,11 @@ function updateState<State>(): [State, Dispatch<State>] {
 		current.baseQueue = baseQueue
 		queue.shared.pending = null
 
-		const { memorizedState, baseState: newBaseState, baseQueue: newBaseQueue } = processUpdateQueue(
-			baseState,
-			baseQueue,
-			workInProgressLane
-		)
+		const {
+			memorizedState,
+			baseState: newBaseState,
+			baseQueue: newBaseQueue
+		} = processUpdateQueue(baseState, baseQueue, workInProgressLane)
 
 		hook.memorizedState = memorizedState
 		hook.baseState = newBaseState

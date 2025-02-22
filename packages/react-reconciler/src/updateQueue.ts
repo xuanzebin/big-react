@@ -58,14 +58,14 @@ export function processUpdateQueue<State>(
 	pendingUpdate: Update<State> | null,
 	renderLane: Lane
 ): {
-	baseState: State;
-	memorizedState: State;
-	baseQueue: Update<State> | null;
+	baseState: State
+	memorizedState: State
+	baseQueue: Update<State> | null
 } {
 	const result: ReturnType<typeof processUpdateQueue<State>> = {
 		baseState,
 		baseQueue: null,
-		memorizedState: baseState,
+		memorizedState: baseState
 	}
 
 	if (pendingUpdate !== null) {
@@ -88,7 +88,7 @@ export function processUpdateQueue<State>(
 					newBaseQueueLast = clone
 					newBaseState = newState
 				} else {
-					(newBaseQueueLast as Update<State>).next = clone
+					;(newBaseQueueLast as Update<State>).next = clone
 					newBaseQueueLast = clone
 				}
 			} else {

@@ -1,5 +1,10 @@
 import { Container } from 'hostConfig'
-import { unstable_ImmediatePriority, unstable_NormalPriority, unstable_runWithPriority, unstable_UserBlockingPriority } from 'scheduler'
+import {
+	unstable_ImmediatePriority,
+	unstable_NormalPriority,
+	unstable_runWithPriority,
+	unstable_UserBlockingPriority
+} from 'scheduler'
 import { Props } from 'shared/ReactTypes'
 
 const validEventTypeList = ['click']
@@ -135,10 +140,10 @@ function eventTypeToSchedulePriority(eventType: string) {
 		case 'click':
 		case 'keydown':
 		case 'keyup':
-			return unstable_ImmediatePriority;
+			return unstable_ImmediatePriority
 		case 'scroll':
-			return unstable_UserBlockingPriority;
+			return unstable_UserBlockingPriority
 		default:
-			return unstable_NormalPriority;
+			return unstable_NormalPriority
 	}
 }

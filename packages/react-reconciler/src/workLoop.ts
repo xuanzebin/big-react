@@ -115,7 +115,7 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 	const currentPriority = updateLane
 	const previousPriority = root.callbackPriority
 
-	if (currentPriority === previousPriority) return 
+	if (currentPriority === previousPriority) return
 
 	if (existingClallbackNode !== null) {
 		unstable_cancelCallback(existingClallbackNode)
@@ -135,14 +135,20 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 		// 异步调度 宏任务
 		const schedulerPriority = lanesToSchedulerPriority(updateLane)
 		// @ts-ignore
-		newCallbackNode = scheduleCallback(schedulerPriority, performConcurrentWorkOnRoot.bind(null, root))
+		newCallbackNode = scheduleCallback(
+			schedulerPriority,
+			performConcurrentWorkOnRoot.bind(null, root)
+		)
 	}
 
 	root.callbackNode = newCallbackNode
 	root.callbackPriority = currentPriority
 }
 
-function performConcurrentWorkOnRoot(root: FiberRootNode, didTimeout: boolean): any {
+function performConcurrentWorkOnRoot(
+	root: FiberRootNode,
+	didTimeout: boolean
+): any {
 	const curCallbackNode = root.callbackNode
 	// 保证 useEffect 都已经执行了
 	const didFlushPassiveEffects = flushPassiveEffect(root.pendingPassiveEffects)
@@ -154,14 +160,14 @@ function performConcurrentWorkOnRoot(root: FiberRootNode, didTimeout: boolean): 
 
 	const lane = root.pendingLanes
 	const currentCallbackNode = root.callbackNode
-	
+
 	if (lane === NoLane) {
 		return null
 	}
 
 	const needSync = lane === SyncLane || didTimeout
- 	const exitStatus = renderRoot(root, lane, !needSync)
-	
+	const exitStatus = renderRoot(root, lane, !needSync)
+
 	ensureRootIsScheduled(root)
 
 	// 中断
@@ -177,7 +183,7 @@ function performConcurrentWorkOnRoot(root: FiberRootNode, didTimeout: boolean): 
 		root.finishedWork = finishedWork
 		root.finishedLane = lane
 		wipRootRenderLane = NoLane
-	
+
 		commitRoot(root)
 	} else if (__DEV__) {
 		console.error('还未实现的并发更新状态')
@@ -199,7 +205,7 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
 		root.finishedWork = finishedWork
 		root.finishedLane = nextLane
 		wipRootRenderLane = NoLane
-	
+
 		commitRoot(root)
 	} else if (__DEV__) {
 		console.error('还未实现的同步更新状态')
