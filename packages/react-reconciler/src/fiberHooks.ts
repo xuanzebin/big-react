@@ -130,7 +130,9 @@ function updateState<State>(): [State, Dispatch<State>] {
 		baseQueue = pending
 		current.baseQueue = baseQueue
 		queue.shared.pending = null
+	}
 
+	if (baseQueue !== null) {
 		const {
 			memorizedState,
 			baseState: newBaseState,
