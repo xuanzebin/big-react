@@ -254,7 +254,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 			newChild = newChild.props.children
 		}
 
-		if (typeof newChild === 'object' && newChild.$$typeof !== null) {
+		if (typeof newChild === 'object' && newChild !== null) {
 			if (Array.isArray(newChild)) {
 				return reconcileChildrenArray(returnFiber, currentFiber, newChild)
 			}

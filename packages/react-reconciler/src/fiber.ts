@@ -21,6 +21,7 @@ export class FiberNode {
 
 	stateNode: any
 
+	// hostRootFiber 的 memorizedState 是 ReactElement 整棵树本身
 	memorizedState: any
 
 	subtreeFlags: Flags

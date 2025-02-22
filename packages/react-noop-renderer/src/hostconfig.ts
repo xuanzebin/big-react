@@ -22,6 +22,7 @@ export interface TextInstance {
 
 let instanceCounter = 0
 
+// export const createInstance = (type: string, props: any): Instance => {
 export const createInstance = (type: string, props: Props): Instance => {
 	const instance = {
 		id: instanceCounter++,

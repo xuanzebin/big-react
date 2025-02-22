@@ -6,6 +6,7 @@ import {
 import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from 'shared/ReactSymbols'
 import { ReactElementType } from 'shared/ReactTypes'
 import { Container } from './hostConfig'
+import * as Scheduler from 'scheduler'
 
 let idCounter = 0
 
@@ -34,7 +35,7 @@ export function createRoot() {
 				key: null,
 				ref: null,
 				props: { children },
-				__mark: 'XiaoP'
+				__mark: 'KaSong'
 			}
 		}
 		return children
@@ -61,10 +62,11 @@ export function createRoot() {
 			) {
 				return children.join('')
 			}
-
+			// [TextInstance, TextInstance, Instance]
 			return children
 		}
 
+		// Instance
 		if (Array.isArray(child.children)) {
 			const instance: Instance = child
 			const children = childToJSX(instance.children)
@@ -80,14 +82,16 @@ export function createRoot() {
 				key: null,
 				ref: null,
 				props,
-				__mark: 'XiaoP'
+				__mark: 'KaSong'
 			}
 		}
 
+		// TextInstance
 		return child.text
 	}
 
 	return {
+		_Scheduler: Scheduler,
 		render(element: ReactElementType) {
 			return updateContainer(element, root)
 		},

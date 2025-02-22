@@ -15,7 +15,6 @@ import { Lane } from './fiberLanes'
 
 export const beginWork = (wip: FiberNode, renderLane: Lane) => {
 	// 返回子 fiberNode
-
 	switch (wip.tag) {
 		case HostRoot:
 			return updateHostRoot(wip, renderLane)

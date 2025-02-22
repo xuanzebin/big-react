@@ -13,7 +13,7 @@ import {
 	commitHookEffectListUnmount,
 	commitMutationEffects
 } from './commitWork'
-import { MutationMask, NoFlags, PassiveEffect } from './fiberFlags'
+import { MutationMask, NoFlags, PassiveEffect, PassiveMask } from './fiberFlags'
 import {
 	getHighestPriorityLane,
 	Lane,
@@ -158,8 +158,8 @@ function commitRoot(root: FiberRootNode) {
 	}
 
 	if (
-		(finishedWork.flags & PassiveEffect) !== NoFlags ||
-		(finishedWork.subtreeFlags & PassiveEffect) !== NoFlags
+		(finishedWork.flags & PassiveMask) !== NoFlags ||
+		(finishedWork.subtreeFlags & PassiveMask) !== NoFlags
 	) {
 		if (!rootDoesHavePassiveEffects) {
 			rootDoesHavePassiveEffects = true

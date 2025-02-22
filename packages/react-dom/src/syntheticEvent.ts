@@ -33,6 +33,8 @@ export function initEvent(container: Container, eventType: string) {
 		console.log(`初始化事件: ${eventType}`)
 	}
 
+	if (!container) return
+
 	container.addEventListener(eventType, (e: Event) => {
 		dispatchEvent(container, eventType, e)
 	})

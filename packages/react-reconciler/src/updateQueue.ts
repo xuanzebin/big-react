@@ -71,6 +71,7 @@ export function processUpdateQueue<State>(
 			const updateLane = pending?.lane
 
 			if (updateLane === renderLane) {
+				// 像 ContainerRoot 的 action 是 container 对应的 ReactElement 整棵树
 				if (action instanceof Function) {
 					baseState = action(baseState)
 				} else {
