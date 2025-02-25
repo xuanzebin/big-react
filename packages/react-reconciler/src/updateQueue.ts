@@ -1,6 +1,6 @@
 import { Action } from 'shared/ReactTypes'
 import { Dispatch } from 'react/src/currentDispatcher'
-import { isSubsetOfLanes, Lane } from './fiberLanes'
+import { isSubsetOfLanes, Lane, NoLane } from './fiberLanes'
 
 export interface Update<State> {
 	action: Action<State>
@@ -78,7 +78,6 @@ export function processUpdateQueue<State>(
 		let newBaseQueueLast: Update<State> | null = null
 
 		do {
-			const action = pending?.action
 			const updateLane = pending?.lane as Lane
 
 			if (!isSubsetOfLanes(renderLane, updateLane)) {
@@ -93,19 +92,20 @@ export function processUpdateQueue<State>(
 				}
 			} else {
 				if (newBaseQueueLast !== null) {
-					const clone = createUpdate(pending.action, pending.lane)
+					const clone = createUpdate(pending.action, NoLane)
 					newBaseQueueLast.next = clone
 					newBaseQueueLast = clone
 				}
+				const action = pending?.action
 				// 像 ContainerRoot 的 action 是 container 对应的 ReactElement 整棵树
 				if (action instanceof Function) {
 					newState = action(newState)
 				} else {
 					newState = action
 				}
-
-				pending = pending?.next as Update<State>
 			}
+
+			pending = pending?.next as Update<State>
 		} while (pending !== first)
 
 		if (newBaseQueueLast === null) {

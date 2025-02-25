@@ -133,6 +133,10 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 		scheduleMicroTask(flushSyncCallbackQueue)
 	} else {
 		// 异步调度 宏任务
+		if (__DEV__) {
+			console.log('异步调度开始，优先级为：', SyncLane)
+		}
+		// 异步调度 宏任务
 		const schedulerPriority = lanesToSchedulerPriority(updateLane)
 		// @ts-ignore
 		newCallbackNode = scheduleCallback(

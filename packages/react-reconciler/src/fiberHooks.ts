@@ -15,6 +15,7 @@ import { scheduleUpdateOnFiber } from './workLoop'
 import { Lane, NoLane, requestUpdateLane } from './fiberLanes'
 import { Flags, PassiveEffect } from './fiberFlags'
 import { HookHasEffect, Passive } from './hooksEffectTags'
+import ReactCurrentBatchConfig from 'react/src/currentBatchConfig'
 
 export interface Hook {
 	memorizedState: any
@@ -76,28 +77,63 @@ export function renderWithHooks(wip: FiberNode, renderLane: Lane) {
 
 const HooksDispatcherOnMount: Dispatcher = {
 	useState: mountState,
-	useEffect: mountEffect
+	useEffect: mountEffect,
+	useTransition: mountTransition
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
-	useEffect: updateEffect
+	useEffect: updateEffect,
+	useTransition: updateTransition
+}
+
+function startTransition(
+	setPending: Dispatch<boolean>,
+	callback: () => void
+): void {
+	setPending(true)
+
+	const previousTransition = ReactCurrentBatchConfig.transition
+	ReactCurrentBatchConfig.transition = 1
+
+	callback()
+	setPending(false)
+
+	ReactCurrentBatchConfig.transition = previousTransition
+}
+
+function mountTransition(): [boolean, (callback: () => void) => void] {
+	const [isPending, dispatch] = mountState(false)
+	const hook = mountWorkInProgressHook()
+	const startTransitionFn = startTransition.bind(null, dispatch)
+	hook.memorizedState = startTransitionFn
+
+	return [isPending, startTransitionFn]
+}
+
+function updateTransition(): [boolean, (callback: () => void) => void] {
+	const [isPending] = updateState<boolean>()
+	const hook = updateWorkInProgressHook()
+	const startTransitionFn = hook.memorizedState
+
+	return [isPending, startTransitionFn]
 }
 
 function mountState<State>(
-	initialState: () => State | State
+	initialState: (() => State) | State
 ): [State, Dispatch<State>] {
 	const hook = mountWorkInProgressHook()
 
 	let memorizedState
 	if (typeof initialState === 'function') {
-		memorizedState = initialState()
+		memorizedState = (initialState as () => State)()
 	} else {
 		memorizedState = initialState
 	}
 
 	const queue = createUpdateQueue<State>()
 	hook.updateQueue = queue
+	hook.baseState = memorizedState
 	hook.memorizedState = memorizedState
 
 	// @ts-ignore
@@ -118,7 +154,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 
 	const current = currentHook as Hook
 	let baseQueue = current.baseQueue
-	const baseState = current.baseState
+	const baseState = hook.baseState
 
 	if (pending !== null) {
 		if (baseQueue !== null) {
