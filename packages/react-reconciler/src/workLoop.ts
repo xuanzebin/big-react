@@ -11,6 +11,7 @@ import {
 	commitHookEffectListCreate,
 	commitHookEffectListDestroy,
 	commitHookEffectListUnmount,
+	commitLayoutEffects,
 	commitMutationEffects
 } from './commitWork'
 import { MutationMask, NoFlags, PassiveEffect, PassiveMask } from './fiberFlags'
@@ -287,9 +288,11 @@ function commitRoot(root: FiberRootNode) {
 	const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags
 
 	if (subtreeHasEffect || rootHasEffect) {
+		commitMutationEffects(finishedWork, root)
+
 		root.current = finishedWork
 
-		commitMutationEffects(finishedWork, root)
+		commitLayoutEffects(finishedWork, root)
 	} else {
 		root.current = finishedWork
 	}

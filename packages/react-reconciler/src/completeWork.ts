@@ -1,5 +1,5 @@
 import { FiberNode } from './fiber'
-import { Flags, NoFlags, Update } from './fiberFlags'
+import { Flags, NoFlags, Ref, Update } from './fiberFlags'
 import {
 	Fragment,
 	FunctionComponent,
@@ -19,6 +19,10 @@ function markUpdate(wip: FiberNode) {
 	wip.flags |= Update
 }
 
+function markRef(workInProgress: FiberNode) {
+	workInProgress.flags |= Ref
+}
+
 export const completeWork = (wip: FiberNode) => {
 	// 递归中的归
 	const newProps = wip.pendingProps
@@ -29,10 +33,16 @@ export const completeWork = (wip: FiberNode) => {
 			if (current !== null && current.stateNode !== null) {
 				// update
 				markUpdate(wip)
+				if (current.ref !== wip.ref) {
+					markRef(wip)
+				}
 			} else {
 				const instance = createInstance(wip.type, newProps)
 				appendAllChildren(instance, wip)
 				wip.stateNode = instance
+				if (wip.ref !== null) {
+					markRef(wip)
+				}
 			}
 			bubbleProperties(wip)
 			return null

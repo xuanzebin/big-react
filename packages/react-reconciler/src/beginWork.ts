@@ -12,6 +12,7 @@ import {
 import { processUpdateQueue, UpdateQueue } from './updateQueue'
 import { mountChildFibers, reconcileChildFibers } from './childFibers'
 import { Lane } from './fiberLanes'
+import { Ref } from './fiberFlags'
 
 export const beginWork = (wip: FiberNode, renderLane: Lane) => {
 	// 返回子 fiberNode
@@ -69,6 +70,8 @@ function updateHostComponent(wip: FiberNode) {
 	const nextPorps = wip.pendingProps
 	const nextChildren = nextPorps.children
 
+	markRef(wip.alternate, wip)
+
 	reconcileChildren(wip, nextChildren)
 
 	return wip.child
@@ -91,5 +94,16 @@ function reconcileChildren(wip: FiberNode, nextChildren?: ReactElementType) {
 	} else {
 		// mount
 		wip.child = mountChildFibers(wip, null, nextChildren)
+	}
+}
+
+function markRef(current: FiberNode | null, workInProgress: FiberNode) {
+	const ref = workInProgress.ref
+
+	if (
+		(current === null && ref !== null) ||
+		(current !== null && current.ref !== ref)
+	) {
+		workInProgress.flags |= Ref
 	}
 }
