@@ -1,5 +1,5 @@
 import internals from 'shared/internals'
-import { Action } from 'shared/ReactTypes'
+import { Action, ReactContext } from 'shared/ReactTypes'
 import { Dispatch, Dispatcher } from 'react/src/currentDispatcher'
 
 import {
@@ -79,14 +79,16 @@ const HooksDispatcherOnMount: Dispatcher = {
 	useState: mountState,
 	useEffect: mountEffect,
 	useTransition: mountTransition,
-	useRef: mountRef
+	useRef: mountRef,
+	useContext: readContext
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
 	useEffect: updateEffect,
 	useTransition: updateTransition,
-	useRef: updateRef
+	useRef: updateRef,
+	useContext: readContext
 }
 
 function mountRef<T>(initialValue: T): { current: T } {
@@ -240,6 +242,15 @@ function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
 			)
 		}
 	}
+}
+
+function readContext<T>(context: ReactContext<T>): T {
+	const consumer = currentlyRenderingFiber
+	if (consumer === null) {
+		throw new Error('只能在函数组件中调用useContext')
+	}
+	
+	return context._currentValue
 }
 
 function areHookInputsEqual(nextDeps: EffectDeps, prevDeps: EffectDeps) {

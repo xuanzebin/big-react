@@ -177,14 +177,26 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		return firstNewFiber
 	}
 
+	function getElementKeyToUse(element: any, index?: number): Key {
+		if (
+			Array.isArray(element) ||
+			typeof element === 'string' ||
+			typeof element === 'number' ||
+			element === undefined ||
+			element === null
+		) {
+			return index
+		}
+		return element.key !== null ? element.key : index
+	}
+
 	function updateFromMap(
 		returnFiber: FiberNode,
 		existingChild: ExistingChildren,
 		index: number,
 		element: any
 	) {
-		const keyToUse =
-			!Array.isArray(element) && element.key !== null ? element.key : index
+		const keyToUse = getElementKeyToUse(element, index)
 		const before = existingChild.get(keyToUse)
 
 		if (typeof element === 'string' || typeof element === 'number') {

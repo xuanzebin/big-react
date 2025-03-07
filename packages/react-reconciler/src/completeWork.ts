@@ -1,6 +1,8 @@
 import { FiberNode } from './fiber'
+import { popProvider } from './fiberContext'
 import { Flags, NoFlags, Ref, Update } from './fiberFlags'
 import {
+	ContextProvider,
 	Fragment,
 	FunctionComponent,
 	HostComponent,
@@ -64,6 +66,10 @@ export const completeWork = (wip: FiberNode) => {
 		case HostRoot:
 		case Fragment:
 		case FunctionComponent:
+			bubbleProperties(wip)
+			return null
+		case ContextProvider:
+			popProvider(wip.type._context)
 			bubbleProperties(wip)
 			return null
 		default:

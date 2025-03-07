@@ -4,8 +4,9 @@ import { Props, Key, Ref, ReactElementType } from 'shared/ReactTypes'
 import { Flags, NoFlags } from './fiberFlags'
 import { Effect } from './fiberHooks'
 import { Lanes, NoLanes } from './fiberLanes'
-import { FunctionComponent, HostComponent, WorkTag, Fragment } from './workTags'
+import { FunctionComponent, HostComponent, WorkTag, Fragment, ContextProvider } from './workTags'
 import { CallbackNode } from 'scheduler'
+import { REACT_PROVIDER_TYPE } from 'shared/ReactSymbols'
 
 export class FiberNode {
 	ref: Ref
@@ -136,6 +137,8 @@ export function createFiberFromElement(element: ReactElementType) {
 
 	if (typeof type === 'string') {
 		fiberTag = HostComponent
+	} else if (typeof type === 'object' && type.$$typeof === REACT_PROVIDER_TYPE) {
+		fiberTag = ContextProvider
 	} else if (typeof type !== 'function' && __DEV__) {
 		console.warn('未定义的 type 类型')
 	}
