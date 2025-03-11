@@ -1,5 +1,5 @@
 import internals from 'shared/internals'
-import { Action, ReactContext } from 'shared/ReactTypes'
+import { Action, ReactContext, Thenable, Usable } from 'shared/ReactTypes'
 import { Dispatch, Dispatcher } from 'react/src/currentDispatcher'
 
 import {
@@ -16,6 +16,8 @@ import { Lane, NoLane, requestUpdateLane } from './fiberLanes'
 import { Flags, PassiveEffect } from './fiberFlags'
 import { HookHasEffect, Passive } from './hooksEffectTags'
 import ReactCurrentBatchConfig from 'react/src/currentBatchConfig'
+import { REACT_CONTEXT_TYPE } from 'shared/ReactSymbols'
+import { trackUsedThenable } from './thenable'
 
 export interface Hook {
 	memorizedState: any
@@ -80,7 +82,8 @@ const HooksDispatcherOnMount: Dispatcher = {
 	useEffect: mountEffect,
 	useTransition: mountTransition,
 	useRef: mountRef,
-	useContext: readContext
+	useContext: readContext,
+	use,
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -88,7 +91,20 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 	useEffect: updateEffect,
 	useTransition: updateTransition,
 	useRef: updateRef,
-	useContext: readContext
+	useContext: readContext,
+	use,
+}
+
+function use<T>(usable: Usable<T>): T {
+	if (usable !== null && typeof usable === 'object') {
+		if (typeof (usable as Thenable<T>).then === 'function') {
+			return trackUsedThenable(usable as Thenable<T>)
+		} else if ((usable as ReactContext<T>).$$typeof === REACT_CONTEXT_TYPE) {
+			return readContext(usable as ReactContext<T>)
+		}
+	}
+
+	throw new Error('不支持的 useable 类型')
 }
 
 function mountRef<T>(initialValue: T): { current: T } {
@@ -249,7 +265,7 @@ function readContext<T>(context: ReactContext<T>): T {
 	if (consumer === null) {
 		throw new Error('只能在函数组件中调用useContext')
 	}
-	
+
 	return context._currentValue
 }
 
@@ -395,4 +411,10 @@ function mountWorkInProgressHook() {
 	}
 
 	return hook
+}
+
+export function resetHooksOnUnwind(unitOfWork: FiberNode) {
+	currentHook = null
+	workInProgressHook = null
+	currentlyRenderingFiber = null
 }

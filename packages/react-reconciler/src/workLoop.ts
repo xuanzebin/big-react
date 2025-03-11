@@ -14,7 +14,7 @@ import {
 	commitLayoutEffects,
 	commitMutationEffects
 } from './commitWork'
-import { MutationMask, NoFlags, PassiveEffect, PassiveMask } from './fiberFlags'
+import { HostEffectMask, MutationMask, NoFlags, PassiveEffect, PassiveMask } from './fiberFlags'
 import {
 	getHighestPriorityLane,
 	Lane,
@@ -33,6 +33,10 @@ import {
 	unstable_shouldYield
 } from 'scheduler'
 import { HookHasEffect, Passive } from './hooksEffectTags'
+import { getSuspenseThenable, SuspenseException } from './thenable'
+import { resetHooksOnUnwind } from './fiberHooks'
+import { unwindWork } from './fiberUnwindWork'
+import { throwException } from './fiberThrow'
 
 type RootExitStatus = number
 const RootInComplete: RootExitStatus = 1
@@ -42,6 +46,12 @@ const RootCompleted: RootExitStatus = 2
 let workInProgress: FiberNode | null = null
 let wipRootRenderLane: Lane = NoLane
 let rootDoesHavePassiveEffects = false
+
+type SuspendedReason = typeof NotSuspended | typeof SuspendedOnData
+ const NotSuspended = 0
+ const SuspendedOnData = 6
+let workInProgressSuspendedReason: SuspendedReason = NotSuspended
+let workInProgressThrownValue: any = null
 
 function prepareFreshStack(root: FiberRootNode, lane: Lane) {
 	root.finishedLane = NoLane
@@ -57,7 +67,7 @@ export function scheduleUpdateOnFiber(fiber: FiberNode, lane: Lane) {
 	ensureRootIsScheduled(root)
 }
 
-function markRootUpdated(root: FiberRootNode, lane: Lane) {
+export function markRootUpdated(root: FiberRootNode, lane: Lane) {
 	root.pendingLanes = mergeLanes(root.pendingLanes, lane)
 }
 
@@ -98,7 +108,7 @@ function markUpdateFromFiberToRoot(fiber: FiberNode) {
 	return null
 }
 
-function ensureRootIsScheduled(root: FiberRootNode) {
+export function ensureRootIsScheduled(root: FiberRootNode) {
 	const updateLane = getHighestPriorityLane(root.pendingLanes)
 	const existingClallbackNode = root.callbackNode
 
@@ -229,13 +239,23 @@ function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
 
 	do {
 		try {
+			if (
+				workInProgressSuspendedReason !== NotSuspended &&
+				workInProgress !== null
+			) {
+				const thrownValue = workInProgressThrownValue
+				workInProgressThrownValue = null
+				workInProgressSuspendedReason = NotSuspended
+
+				throwAndUnwindWorkLoop(root, workInProgress, thrownValue, lane)
+			}
 			shouldTimeSlice ? workLoopConcurrent() : workLoopSync()
 			break
 		} catch (e) {
 			if (__DEV__) {
 				console.warn('workLoop 发生错误', e)
 			}
-			workInProgress = null
+			handleThrow(root, e)
 		}
 	} while (true)
 
@@ -249,6 +269,44 @@ function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
 	}
 
 	return RootCompleted
+}
+
+function unwindUnitOfWork(unitOfWork: FiberNode) {
+	let incompoleteWork = unitOfWork
+	do {
+		const next = unwindWork(incompoleteWork)
+
+		if (next !== null) {
+			next.flags &= HostEffectMask
+			workInProgress = next
+			return
+		}
+
+		const returnFiber = incompoleteWork.return as FiberNode
+		if (returnFiber !== null) {
+			returnFiber.deletions = null
+		}
+		incompoleteWork = returnFiber
+	} while (incompoleteWork !== null)
+	
+	// 没有边界中指 unwind 流程，一直到 root
+	workInProgress = null
+}
+
+function throwAndUnwindWorkLoop(root: FiberRootNode, unitOfWork: FiberNode, thrownValue: any, lane: Lane) {
+	resetHooksOnUnwind(unitOfWork)
+	throwException(root, thrownValue, lane)
+	unwindUnitOfWork(unitOfWork)
+}
+
+function handleThrow(root: FiberRootNode, thrownValue: any): void {
+	if (thrownValue === SuspenseException) {
+		workInProgressSuspendedReason = SuspendedOnData
+		thrownValue = getSuspenseThenable()
+	} else {
+		// TODO Error Boundary
+	}
+	workInProgressThrownValue = thrownValue
 }
 
 function commitRoot(root: FiberRootNode) {

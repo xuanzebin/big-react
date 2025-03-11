@@ -36,6 +36,12 @@ export const useContext: Dispatcher['useContext'] = (context) => {
 	return dispatcher.useContext(context)
 }
 
+export const use: Dispatcher['use'] = (usable) => {
+	const dispatcher = resolveDispatcher()
+
+	return dispatcher.use(usable)
+}
+
 export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
 	currentDispatcher,
 	currentBatchConfig
@@ -48,6 +54,7 @@ export const createElement = jsx
 export const isValidElement = isValidElementFn
 
 export * from './src/context'
+export * from './src/jsx'
 
 export default {
 	version: '0.0.0',

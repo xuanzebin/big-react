@@ -1,13 +1,16 @@
 import { FiberNode } from './fiber'
 import { popProvider } from './fiberContext'
-import { Flags, NoFlags, Ref, Update } from './fiberFlags'
+import { Flags, NoFlags, Ref, Update, Visibility } from './fiberFlags'
+import { popSuspenseHandler } from './suspenseContext'
 import {
 	ContextProvider,
 	Fragment,
 	FunctionComponent,
 	HostComponent,
 	HostRoot,
-	HostText
+	HostText,
+	OffscreenComponent,
+	SuspenseComponent
 } from './workTags'
 import {
 	appendInitialChild,
@@ -65,11 +68,30 @@ export const completeWork = (wip: FiberNode) => {
 			return null
 		case HostRoot:
 		case Fragment:
+		case OffscreenComponent:
 		case FunctionComponent:
 			bubbleProperties(wip)
 			return null
 		case ContextProvider:
 			popProvider(wip.type._context)
+			bubbleProperties(wip)
+			return null
+		case SuspenseComponent:
+			popSuspenseHandler()
+			const offscreenFiber = wip.child as FiberNode
+			const isHidden = offscreenFiber.pendingProps.mode === 'hidden'
+			const currentOffscreenFiber = offscreenFiber.alternate
+
+			if (currentOffscreenFiber !== null) {
+				const wasHidden = currentOffscreenFiber.pendingProps.mode === 'hidden'
+				if (isHidden !== wasHidden) {
+					offscreenFiber.flags |= Visibility
+					bubbleProperties(offscreenFiber)
+				}
+			} else if (isHidden) {
+				offscreenFiber.flags |= Visibility
+				bubbleProperties(offscreenFiber)
+			}
 			bubbleProperties(wip)
 			return null
 		default:

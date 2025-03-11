@@ -120,3 +120,19 @@ export const scheduleMicroTask =
 		: typeof Promise === 'function'
 		? (callback: (...args: any) => void) => Promise.resolve(null).then(callback)
 		: setTimeout
+
+export function hideInstance(instance: Instance): void {
+	// empty
+}
+
+export function unhideInstance(instance: Instance): void {
+	// empty
+}
+
+export function hideTextInstance(textInstance: TextInstance): void {
+	// empty
+}
+
+export function unhideTextInstance(textInstance: TextInstance, text: string): void {
+	// empty
+}
