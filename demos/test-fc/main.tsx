@@ -5,7 +5,7 @@ function App() {
 	const [num, update] = useState(100)
 
 	return (
-		<ul onClick={() => update(50)}>
+		<ul onClick={() => update(num => num - 1)}>
 			{new Array(num).fill(0).map((_, i) => {
 				return <Child key={i}>{i}</Child>
 			})}
@@ -14,8 +14,6 @@ function App() {
 }
 
 function Child({ children }) {
-	const now = performance.now()
-	while (performance.now() - now < 4) {}
 	return <li>{children}</li>
 }
 

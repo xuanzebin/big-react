@@ -1,6 +1,6 @@
 import { Wakeable } from "shared/ReactTypes"
 import { FiberRootNode } from "./fiber"
-import { Lane } from "./fiberLanes"
+import { Lane, markRootPinged } from "./fiberLanes"
 import { getSuspenseHandler } from "./suspenseContext"
 import { ShouldCapture } from "./fiberFlags"
 import { ensureRootIsScheduled, markRootUpdated } from "./workLoop"
@@ -27,6 +27,7 @@ function attachPingListener(root: FiberRootNode, wakeable: Wakeable<any>, lane: 
       if (pingCache !== null) {
         pingCache.delete(wakeable)
       }
+      markRootPinged(root, lane)
       markRootUpdated(root, lane)
       ensureRootIsScheduled(root)
     }

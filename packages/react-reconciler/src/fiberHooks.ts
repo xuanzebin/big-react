@@ -361,7 +361,7 @@ function updateWorkInProgressHook() {
 
 	if (nextCurrentHook === null) {
 		throw new Error(
-			`组件 ${currentlyRenderingFiber?.type} 本次执行的 hook 比上次一次要多`
+			`组件 ${currentlyRenderingFiber?.type.name} 本次执行的 hook 比上次一次要多`
 		)
 	}
 
