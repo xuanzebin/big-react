@@ -44,6 +44,10 @@ export class FiberNode {
 
 	deletions: FiberNode[] | null
 
+	lanes: Lanes
+
+	childLanes: Lanes
+
 	constructor(tag: WorkTag, pendingProps: Props, key: Key) {
 		this.key = key || null
 		this.tag = tag
@@ -68,6 +72,9 @@ export class FiberNode {
 		this.subtreeFlags = NoFlags
 		this.alternate = null
 		this.deletions = null
+
+		this.lanes = NoLanes
+		this.childLanes = NoLanes
 	}
 }
 
@@ -137,6 +144,9 @@ export function createWorInProgress(current: FiberNode, pendingProps: Props) {
 	wip.memorizedState = current.memorizedState
 	wip.ref = current.ref
 
+	wip.lanes = current.lanes
+	wip.childLanes = current.childLanes
+
 	return wip
 }
 
@@ -177,3 +187,4 @@ export function createFiberFromOffscreen(pendingProps: OffscreenProps) {
 
 	return fiber
 }
+

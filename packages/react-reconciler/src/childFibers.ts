@@ -335,3 +335,23 @@ function updateFragment(
 
 export const mountChildFibers = ChildReconciler(false)
 export const reconcileChildFibers = ChildReconciler(true)
+
+
+export function cloneChildFibers(wip: FiberNode) {
+	if (wip.child === null) {
+		return;
+	}
+
+	let currentChild = wip.child
+	let newChild = createWorInProgress(currentChild, currentChild.pendingProps)
+
+	wip.child = newChild
+	newChild.return = wip
+
+	while (currentChild.sibling !== null) {
+		currentChild = currentChild.sibling
+		newChild.sibling = createWorInProgress(currentChild, currentChild.pendingProps)
+		newChild = newChild.sibling
+		newChild.return = wip
+	}
+}

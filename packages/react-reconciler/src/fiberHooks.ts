@@ -12,12 +12,13 @@ import {
 } from './updateQueue'
 import { FiberNode } from './fiber'
 import { scheduleUpdateOnFiber } from './workLoop'
-import { Lane, NoLane, requestUpdateLane } from './fiberLanes'
+import { Lane, mergeLanes, NoLane, removeLanes, requestUpdateLane } from './fiberLanes'
 import { Flags, PassiveEffect } from './fiberFlags'
 import { HookHasEffect, Passive } from './hooksEffectTags'
 import ReactCurrentBatchConfig from 'react/src/currentBatchConfig'
 import { REACT_CONTEXT_TYPE } from 'shared/ReactSymbols'
 import { trackUsedThenable } from './thenable'
+import { markWipReceivedUpdate } from './beginWork'
 
 export interface Hook {
 	memorizedState: any
@@ -203,11 +204,20 @@ function updateState<State>(): [State, Dispatch<State>] {
 	}
 
 	if (baseQueue !== null) {
+		const prevState = hook.memorizedState
 		const {
 			memorizedState,
 			baseState: newBaseState,
 			baseQueue: newBaseQueue
-		} = processUpdateQueue(baseState, baseQueue, workInProgressLane)
+		} = processUpdateQueue(baseState, baseQueue, workInProgressLane, (update) => {
+			const skippedLane = update.lane
+			const fiber = currentlyRenderingFiber as FiberNode
+			fiber.lanes = mergeLanes(fiber.lanes, skippedLane)
+		})
+
+		if (!Object.is(prevState, memorizedState)) {
+			markWipReceivedUpdate()
+		}
 
 		hook.memorizedState = memorizedState
 		hook.baseState = newBaseState
@@ -340,7 +350,7 @@ function dispatchSetState<State>(
 	const lane = requestUpdateLane()
 	const update = createUpdate(action, lane)
 
-	enqueueUpdate(queue, update)
+	enqueueUpdate(queue, update, fiber, lane)
 	scheduleUpdateOnFiber(fiber, lane)
 }
 
@@ -417,4 +427,12 @@ export function resetHooksOnUnwind(unitOfWork: FiberNode) {
 	currentHook = null
 	workInProgressHook = null
 	currentlyRenderingFiber = null
+}
+
+export function bailoutHooks(wip: FiberNode, renderLane: Lane) {
+	const current = wip.alternate as FiberNode
+	wip.updateQueue = current.updateQueue
+	wip.flags &= ~PassiveEffect
+
+	current.lanes = removeLanes(wip.lanes, renderLane)
 }

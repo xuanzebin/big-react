@@ -69,7 +69,7 @@ function prepareFreshStack(root: FiberRootNode, lane: Lane) {
 }
 
 export function scheduleUpdateOnFiber(fiber: FiberNode, lane: Lane) {
-	const root = markUpdateFromFiberToRoot(fiber)
+	const root = markUpdateLaneFromFiberToRoot(fiber, lane)
 
 	markRootUpdated(root, lane)
 	ensureRootIsScheduled(root)
@@ -100,11 +100,17 @@ function flushPassiveEffect(pendingPassiveEffects: PengdingPssiveEffects) {
 	return didFlushPassiveEffects
 }
 
-function markUpdateFromFiberToRoot(fiber: FiberNode) {
+function markUpdateLaneFromFiberToRoot(fiber: FiberNode, lane: Lane) {
 	let node = fiber
 	let parent = node.return
 
 	while (parent !== null) {
+		parent.childLanes = mergeLanes(parent.childLanes, lane)
+		const alternate = parent.alternate
+		if (alternate !== null) {
+			alternate.childLanes = mergeLanes(alternate.childLanes, lane)
+		}
+
 		node = parent
 		parent = node.return
 	}

@@ -1,6 +1,7 @@
 import { FiberNode } from './fiber'
 import { popProvider } from './fiberContext'
 import { Flags, NoFlags, Ref, Update, Visibility } from './fiberFlags'
+import { mergeLanes, NoLanes } from './fiberLanes'
 import { popSuspenseHandler } from './suspenseContext'
 import {
 	ContextProvider,
@@ -135,15 +136,19 @@ function appendAllChildren(parent: Container | Instance, wip: FiberNode) {
 
 function bubbleProperties(wip: FiberNode) {
 	let subtreeFlags = NoFlags
+	let newChildLanes = NoLanes
 	let child = wip.child
 
 	while (child !== null) {
 		subtreeFlags |= child.subtreeFlags
 		subtreeFlags |= child.flags
+		newChildLanes = mergeLanes(newChildLanes, child.childLanes)
+		newChildLanes = mergeLanes(newChildLanes, child.lanes)
 
 		child.return = wip
 		child = child.sibling
 	}
 
 	wip.subtreeFlags = subtreeFlags as Flags
+	wip.childLanes = newChildLanes
 }

@@ -1,6 +1,7 @@
 import { Action } from 'shared/ReactTypes'
 import { Dispatch } from 'react/src/currentDispatcher'
-import { isSubsetOfLanes, Lane, NoLane } from './fiberLanes'
+import { isSubsetOfLanes, Lane, Lanes, mergeLanes, NoLane } from './fiberLanes'
+import { FiberNode } from './fiber'
 
 export interface Update<State> {
 	action: Action<State>
@@ -39,7 +40,9 @@ export function createUpdateQueue<State>(): UpdateQueue<State> {
 
 export function enqueueUpdate<State>(
 	queue: UpdateQueue<State>,
-	update: Update<State>
+	update: Update<State>,
+	fiber: FiberNode,
+	lane: Lane
 ) {
 	const pending = queue.shared.pending
 
@@ -51,12 +54,19 @@ export function enqueueUpdate<State>(
 	}
 
 	queue.shared.pending = update
+	fiber.lanes = mergeLanes(fiber.lanes, lane)
+
+	const alternate = fiber.alternate
+	if (alternate !== null) {
+		alternate.lanes = mergeLanes(alternate.lanes, lane)
+	}
 }
 
 export function processUpdateQueue<State>(
 	baseState: State,
 	pendingUpdate: Update<State> | null,
-	renderLane: Lane
+	renderLane: Lane,
+	onSkipUpdate?: <State>(update: Update<State>) => void 
 ): {
 	baseState: State
 	memorizedState: State
@@ -82,6 +92,9 @@ export function processUpdateQueue<State>(
 
 			if (!isSubsetOfLanes(renderLane, updateLane)) {
 				const clone = createUpdate(pending.action, pending.lane)
+
+				onSkipUpdate?.(clone)
+				
 				if (newBaseQueueFirst === null) {
 					newBaseQueueFirst = clone
 					newBaseQueueLast = clone
