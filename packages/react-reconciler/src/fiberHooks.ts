@@ -8,7 +8,8 @@ import {
 	enqueueUpdate,
 	createUpdateQueue,
 	processUpdateQueue,
-	Update
+	Update,
+	basicStateReducer
 } from './updateQueue'
 import { FiberNode } from './fiber'
 import { scheduleUpdateOnFiber } from './workLoop'
@@ -41,6 +42,7 @@ type EffectDeps = any[] | null
 
 export interface FCUpdateQueue<State> extends UpdateQueue<State> {
 	lastEffect: Effect | null
+	lastRenderedState: State
 }
 
 let currentHook: Hook | null = null
@@ -166,7 +168,7 @@ function mountState<State>(
 		memorizedState = initialState
 	}
 
-	const queue = createUpdateQueue<State>()
+	const queue = createFCUpdateQueue<State>()
 	hook.updateQueue = queue
 	hook.baseState = memorizedState
 	hook.memorizedState = memorizedState
@@ -175,16 +177,17 @@ function mountState<State>(
 	const dispatch = dispatchSetState.bind(
 		null,
 		currentlyRenderingFiber,
-		hook.updateQueue as UpdateQueue<unknown>
+		hook.updateQueue as FCUpdateQueue<unknown>
 	)
 	queue.dispatch = dispatch
+	queue.lastRenderedState = memorizedState
 
 	return [memorizedState, dispatch]
 }
 
 function updateState<State>(): [State, Dispatch<State>] {
 	const hook = updateWorkInProgressHook()
-	const queue = hook.updateQueue as UpdateQueue<State>
+	const queue = hook.updateQueue as FCUpdateQueue<State>
 	const pending = queue.shared.pending
 
 	const current = currentHook as Hook
@@ -222,6 +225,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 		hook.memorizedState = memorizedState
 		hook.baseState = newBaseState
 		hook.baseQueue = newBaseQueue
+		queue.lastRenderedState = memorizedState
 	}
 
 	return [hook.memorizedState, queue.dispatch as Dispatch<State>]
@@ -342,13 +346,32 @@ function createFCUpdateQueue<State>() {
 
 function dispatchSetState<State>(
 	fiber: FiberNode | null,
-	queue: UpdateQueue<State>,
+	queue: FCUpdateQueue<State>,
 	action: Action<State>
 ) {
 	if (fiber === null) return
 
 	const lane = requestUpdateLane()
 	const update = createUpdate(action, lane)
+
+	const current = fiber.alternate
+	if (
+		fiber.lanes === NoLane &&
+		(current === null || current.lanes === NoLane)
+	) {
+		const currentState = queue.lastRenderedState
+		const eagerState = basicStateReducer(currentState, action)
+		update.hasEagerState = true
+		update.eagerState = eagerState
+
+		if (Object.is(currentState, eagerState)) {
+			if (__DEV__) {
+				console.warn('状态没有改变, 命中 eagerState', fiber)
+			}
+			enqueueUpdate(queue, update, fiber, NoLane)
+			return
+		}
+	}
 
 	enqueueUpdate(queue, update, fiber, lane)
 	scheduleUpdateOnFiber(fiber, lane)

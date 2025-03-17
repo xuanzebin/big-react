@@ -7,6 +7,8 @@ export interface Update<State> {
 	action: Action<State>
 	next: Update<any> | null
 	lane: Lane
+	hasEagerState?: boolean
+	eagerState?: State | null
 }
 
 export interface UpdateQueue<State> {
@@ -18,12 +20,16 @@ export interface UpdateQueue<State> {
 
 export function createUpdate<State>(
 	action: Action<State>,
-	lane: Lane
+	lane: Lane,
+	hasEagerState = false,
+	eagerState = null
 ): Update<State> {
 	return {
 		action,
 		lane,
-		next: null
+		next: null,
+		hasEagerState,
+		eagerState
 	}
 }
 
@@ -62,6 +68,14 @@ export function enqueueUpdate<State>(
 	}
 }
 
+export function basicStateReducer<State>(state: State, action: Action<State>): State {
+	if (action instanceof Function) {
+		return action(state)
+	} else {
+		return action
+	}
+}
+
 export function processUpdateQueue<State>(
 	baseState: State,
 	pendingUpdate: Update<State> | null,
@@ -94,7 +108,7 @@ export function processUpdateQueue<State>(
 				const clone = createUpdate(pending.action, pending.lane)
 
 				onSkipUpdate?.(clone)
-				
+
 				if (newBaseQueueFirst === null) {
 					newBaseQueueFirst = clone
 					newBaseQueueLast = clone
@@ -110,11 +124,10 @@ export function processUpdateQueue<State>(
 					newBaseQueueLast = clone
 				}
 				const action = pending?.action
-				// 像 ContainerRoot 的 action 是 container 对应的 ReactElement 整棵树
-				if (action instanceof Function) {
-					newState = action(newState)
+				if (pending.hasEagerState) {
+					newState = pending.eagerState
 				} else {
-					newState = action
+					newState = basicStateReducer(newState, action)
 				}
 			}
 

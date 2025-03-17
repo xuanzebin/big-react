@@ -44,6 +44,7 @@ export class FiberNode {
 
 	deletions: FiberNode[] | null
 
+	// current 和 wip 的 lanes 是保持一致的，可以理解为 current 的 lanes 是 wip 的存档，用于一些中断流程的记录和恢复
 	lanes: Lanes
 
 	childLanes: Lanes
