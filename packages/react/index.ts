@@ -55,6 +55,7 @@ export const isValidElement = isValidElementFn
 
 export * from './src/context'
 export * from './src/jsx'
+export * from './src/memo'
 
 export default {
 	version: '0.0.0',

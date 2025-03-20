@@ -9,6 +9,7 @@ import {
 	HostComponent,
 	HostRoot,
 	HostText,
+	MemoComponent,
 	OffscreenComponent,
 	SuspenseComponent
 } from './workTags'
@@ -18,6 +19,7 @@ import { includesSomeLanes, Lane, NoLane, NoLanes } from './fiberLanes'
 import { ChildDeletion, DidCapture, NoFlags, Placement, Ref } from './fiberFlags'
 import { pushProvider } from './fiberContext'
 import { pushSuspenseHandler } from './suspenseContext'
+import { shallowEqual } from 'shared/shallowEquals'
 
 let didReceiveUpdate = false
 
@@ -67,7 +69,7 @@ export const beginWork = (wip: FiberNode, renderLane: Lane) => {
 		case HostComponent:
 			return updateHostComponent(wip)
 		case FunctionComponent:
-			return updateFunctionComponent(wip, renderLane)
+			return updateFunctionComponent(wip, wip.type, renderLane)
 		case HostText:
 			return null
 		case ContextProvider:
@@ -76,6 +78,8 @@ export const beginWork = (wip: FiberNode, renderLane: Lane) => {
 			return updateSuspenseComponent(wip)
 		case OffscreenComponent:
 			return updateOffscreenComponent(wip)
+		case MemoComponent:
+			return updateMemoComponent(wip, renderLane)
 		default:
 			if (__DEV__) {
 				console.warn('beginWork 未实现的类型')
@@ -165,8 +169,8 @@ function updateHostComponent(wip: FiberNode) {
 	return wip.child
 }
 
-function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
-	const nextChildren = renderWithHooks(wip, renderLane)
+function updateFunctionComponent(wip: FiberNode, Component: FiberNode['type'], renderLane: Lane) {
+	const nextChildren = renderWithHooks(wip, Component, renderLane)
 
 	const current = wip.alternate
 
@@ -191,6 +195,29 @@ function updateContextProvider(wip: FiberNode) {
 	reconcileChildren(wip, nextChildren)
 
 	return wip.child
+}
+
+function updateMemoComponent(wip: FiberNode, renderLane: Lane) {
+	const current = wip.alternate
+	const nextProps = wip.pendingProps
+	const Component = wip.type.type
+
+	if (current !== null) {
+		const prevProps = current.memoizedProps
+
+
+		if (shallowEqual(prevProps, nextProps) && current.ref === wip.ref) {
+			didReceiveUpdate = false
+			wip.pendingProps = prevProps
+
+			if (!checkScheduledStateUpdateOrContext(current, renderLane)) {
+				wip.lanes = current.lanes
+				return bailoutOnAlreadyFinishedWork(wip, renderLane)
+			}
+		}
+	}
+
+	return updateFunctionComponent(wip, Component, renderLane)
 }
 
 function updateSuspenseComponent(wip: FiberNode) {

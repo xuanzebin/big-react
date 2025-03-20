@@ -52,7 +52,7 @@ let currentlyRenderingFiber: FiberNode | null = null
 
 const { currentDispatcher } = internals
 
-export function renderWithHooks(wip: FiberNode, renderLane: Lane) {
+export function renderWithHooks(wip: FiberNode, Component: FiberNode["type"], renderLane: Lane) {
 	currentlyRenderingFiber = wip
 	workInProgressLane = renderLane
 	wip.memorizedState = null
@@ -68,7 +68,6 @@ export function renderWithHooks(wip: FiberNode, renderLane: Lane) {
 		currentDispatcher.current = HooksDispatcherOnMount
 	}
 
-	const Component = wip.type
 	const props = wip.pendingProps
 	const children = Component(props)
 

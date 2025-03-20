@@ -10,6 +10,7 @@ import {
 	HostComponent,
 	HostRoot,
 	HostText,
+	MemoComponent,
 	OffscreenComponent,
 	SuspenseComponent
 } from './workTags'
@@ -71,6 +72,7 @@ export const completeWork = (wip: FiberNode) => {
 		case Fragment:
 		case OffscreenComponent:
 		case FunctionComponent:
+		case MemoComponent:
 			bubbleProperties(wip)
 			return null
 		case ContextProvider:
