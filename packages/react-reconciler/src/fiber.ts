@@ -139,7 +139,9 @@ export function createWorInProgress(current: FiberNode, pendingProps: Props) {
 	}
 
 	wip.type = current.type
+	wip.index = current.index
 	wip.child = current.child
+	wip.sibling = current.sibling
 	wip.updateQueue = current.updateQueue
 	wip.memoizedProps = current.memoizedProps
 	wip.memorizedState = current.memorizedState
