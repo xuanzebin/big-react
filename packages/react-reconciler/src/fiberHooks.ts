@@ -33,12 +33,12 @@ export interface Effect {
 	tag: Flags
 	create: EffectCallback | void
 	destroy: EffectCallback | void
-	deps: EffectDeps
+	deps: HookDeps
 	next: Effect | null
 }
 
 type EffectCallback = () => void
-type EffectDeps = any[] | null
+export type HookDeps = any[] | null
 
 export interface FCUpdateQueue<State> extends UpdateQueue<State> {
 	lastEffect: Effect | null
@@ -86,6 +86,8 @@ const HooksDispatcherOnMount: Dispatcher = {
 	useRef: mountRef,
 	useContext: readContext,
 	use,
+	useCallback: mountCallback,
+	useMemo: mountMemo
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -95,6 +97,8 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 	useRef: updateRef,
 	useContext: readContext,
 	use,
+	useCallback: updateCallback,
+	useMemo: updateMemo
 }
 
 function use<T>(usable: Usable<T>): T {
@@ -230,7 +234,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 	return [hook.memorizedState, queue.dispatch as Dispatch<State>]
 }
 
-function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+function mountEffect(create: EffectCallback | void, deps: HookDeps | void) {
 	const hook = mountWorkInProgressHook()
 	const nextDeps = deps === undefined ? null : deps
 
@@ -244,7 +248,7 @@ function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
 	)
 }
 
-function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+function updateEffect(create: EffectCallback | void, deps: HookDeps | void) {
 	const hook = updateWorkInProgressHook()
 	const nextDeps = deps === undefined ? null : deps
 	let destroy: EffectCallback | void
@@ -282,7 +286,57 @@ function readContext<T>(context: ReactContext<T>): T {
 	return context._currentValue
 }
 
-function areHookInputsEqual(nextDeps: EffectDeps, prevDeps: EffectDeps) {
+function mountCallback<T>(callback: T, deps: HookDeps | void): T {
+	const hook = mountWorkInProgressHook()
+	const nextDeps = deps === undefined ? null : deps
+	hook.memorizedState = [callback, nextDeps]
+	return callback
+}
+
+function updateCallback<T>(callback: T, deps: HookDeps | void): T {
+	const hook = updateWorkInProgressHook()
+	const nextDeps = deps === undefined ? null : deps
+	const prevState = hook.memorizedState
+
+	if (nextDeps !== null) {
+		const prevDeps = prevState[1]
+		if (areHookInputsEqual(nextDeps, prevDeps)) {
+			return prevState[0]
+		}
+	}
+
+	hook.memorizedState = [callback, nextDeps]
+
+	return callback
+}
+
+function mountMemo<T>(nextCreate: () => T, deps: HookDeps | void): T {
+	const hook = mountWorkInProgressHook()
+	const nextDeps = deps === undefined ? null : deps
+	const nextValue = nextCreate()
+	hook.memorizedState = [nextValue, nextDeps]
+	return nextValue
+}
+
+function updateMemo<T>(nextCreate: () => T, deps: HookDeps | void): T {
+	const hook = updateWorkInProgressHook()
+	const nextDeps = deps === undefined ? null : deps
+	const prevState = hook.memorizedState
+
+	if (nextDeps !== null) {
+		const prevDeps = prevState[1]
+		if (areHookInputsEqual(nextDeps, prevDeps)) {
+			return prevState[0]
+		}
+	}
+
+	const nextValue = nextCreate()
+	hook.memorizedState = [nextValue, nextDeps]
+
+	return nextValue
+}
+
+function areHookInputsEqual(nextDeps: HookDeps, prevDeps: HookDeps) {
 	if (nextDeps === null || prevDeps === null) return false
 
 	for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
@@ -300,7 +354,7 @@ function pushEffect(
 	hookFlags: Flags,
 	create: EffectCallback | void,
 	destroy: EffectCallback | void,
-	deps: EffectDeps
+	deps: HookDeps
 ): Effect {
 	const effect: Effect = {
 		tag: hookFlags,
