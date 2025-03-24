@@ -20,6 +20,7 @@ import ReactCurrentBatchConfig from 'react/src/currentBatchConfig'
 import { REACT_CONTEXT_TYPE } from 'shared/ReactSymbols'
 import { trackUsedThenable } from './thenable'
 import { markWipReceivedUpdate } from './beginWork'
+import { readContext as readContextOrigin } from './fiberContext'
 
 export interface Hook {
 	memorizedState: any
@@ -111,6 +112,10 @@ function use<T>(usable: Usable<T>): T {
 	}
 
 	throw new Error('不支持的 useable 类型')
+}
+
+function readContext<T>(context: ReactContext<T>) {
+	return readContextOrigin(currentlyRenderingFiber, context)
 }
 
 function mountRef<T>(initialValue: T): { current: T } {
@@ -275,15 +280,6 @@ function updateEffect(create: EffectCallback | void, deps: HookDeps | void) {
 			)
 		}
 	}
-}
-
-function readContext<T>(context: ReactContext<T>): T {
-	const consumer = currentlyRenderingFiber
-	if (consumer === null) {
-		throw new Error('只能在函数组件中调用useContext')
-	}
-
-	return context._currentValue
 }
 
 function mountCallback<T>(callback: T, deps: HookDeps | void): T {
